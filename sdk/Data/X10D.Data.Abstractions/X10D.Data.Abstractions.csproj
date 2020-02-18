@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Data.Abstractions.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Data.Abstractions.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExtCore.Data.Abstractions" Version="5.1.0" />
+  </ItemGroup>
+
+</Project>

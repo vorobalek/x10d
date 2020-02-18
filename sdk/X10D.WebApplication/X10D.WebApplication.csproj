@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\.builds\doc\X10D.WebApplication.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\.builds\doc\X10D.WebApplication.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExtCore.WebApplication" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\X10D.Infrastructure\X10D.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

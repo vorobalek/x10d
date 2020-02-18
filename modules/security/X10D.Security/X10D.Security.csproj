@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\..\.builds\app\netcoreapp3.1\modules\security</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Security.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\..\.builds\app\netcoreapp3.1\modules\security</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Security.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\sdk\X10D.Infrastructure\X10D.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

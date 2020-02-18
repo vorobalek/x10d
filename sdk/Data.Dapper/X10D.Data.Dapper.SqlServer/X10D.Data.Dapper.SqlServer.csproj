@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Data.Dapper.SqlServer.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\..\.builds\sdk</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Data.Dapper.SqlServer.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExtCore.Data.Dapper.SqlServer" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\X10D.Data.Dapper\X10D.Data.Dapper.csproj" />
+  </ItemGroup>
+
+</Project>
