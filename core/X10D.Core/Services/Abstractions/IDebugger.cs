@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal interface IDebuggerSession : IDebuggerSessionFacade
+    internal interface IDebuggerSession : IDebuggerSessionFacade, IServicePrototype
     {
-        void ProcessDebug(string key);
+        string DebugInfoString { get; }
     }
 
     internal interface IDebuggerCompomnent
@@ -33,6 +34,7 @@ namespace X10D.Core.Services
     {
         IDictionary<string, Type> Components { get; }
         IList<IDebuggerCompomnent> ComponentsInfo { get; }
-        new IDebuggerSession CreateSession();
+        IList<IDebuggerSession> Sessions { get; }
+        new Task<IDebuggerSession> ProcessDebugAsync(string[] keys);
     }
 }

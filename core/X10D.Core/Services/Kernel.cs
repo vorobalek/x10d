@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using X10D.Core.Extensions;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
@@ -12,18 +13,15 @@ namespace X10D.Core.Services
     internal sealed class Kernel : ServicePrototype, IKernel
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
-        
-        private IServiceProvider ServiceProvider { get; }
-        
         private ILogger Logger { get; }
-        
-        public IList<IServicePrototype> Services { get; private set; } = new List<IServicePrototype>();
+        private IServiceScope Scope { get; }
+        public List<IServicePrototype> Services { get; } = new List<IServicePrototype>();
 
         private Guid token = Guid.NewGuid();
         
         public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger)
         {
-            ServiceProvider = serviceProvider;
+            Scope = serviceProvider.CreateScope();
             Logger = logger;
 
             Idle();
@@ -54,32 +52,18 @@ namespace X10D.Core.Services
             var tasks = Services.Select(service => service.Flush());
             Task.WaitAll(tasks.ToArray());
 
-            Services = new List<IServicePrototype>();
+            Services.ForEach(service => service.RemoveOnAfterStateChange(null, serviceStateListeners.GetValueOrDefault(service).Invoke));
+            Services.Clear();
+            serviceStateListeners.Clear();
             base.FlushService();
         }
 
         protected override void PrepareService()
         {
-            var services = ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)));
-            Services = services.Select(service =>
-                service
-                    .OnBeforeStateChange(state =>
-                    {
-                        Logger.LogWarning($"Сервис {service.GetType().GetFullName()} переходит из состояния {state}");
-                    }, state =>
-                    {
-                        Logger.LogWarning($"Сервис {service.GetType().GetFullName()} переходит в состояние {state}");
-                    })
-                    .OnAfterStateChange(state =>
-                    {
-                        Logger.LogWarning($"Сервис {service.GetType().GetFullName()} перешел из состояния {state}");
-                    }, state =>
-                    {
-                        Logger.LogWarning($"Сервис {service.GetType().GetFullName()} перешел в состояние {state}");
-                    })).ToList();
-
-
-            var tasks = Services.Select(service => service.Prepare());
+            var services = Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)));
+            Services.AddRange(services);
+            Services.ForEach(service => serviceStateListeners.Add(service, (state) => service.LogServiceChangeState(Logger, state)));
+            var tasks = Services.Select(service => service.AddOnAfterStateChange(null, serviceStateListeners.GetValueOrDefault(service).Invoke).Prepare());
             Task.WaitAll(tasks.ToArray());
 
             base.PrepareService();
@@ -113,8 +97,10 @@ namespace X10D.Core.Services
 
         public void Dispose()
         {
-            StopService();
-            FlushService();
+            (this as IServicePrototype).Stop().Wait();
+            (this as IServicePrototype).Flush().Wait();
         }
+
+        private readonly Dictionary<IServicePrototype, Action<ServiceState>> serviceStateListeners = new Dictionary<IServicePrototype, Action<ServiceState>>();
     }
 }

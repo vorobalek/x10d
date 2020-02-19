@@ -19,21 +19,8 @@ namespace X10D.Core.Middleware
 
             if (context.Request.Query.TryGetValue("debug", out var debugObj) && debugObj.Count > 0 && debugObj[0] is string debug)
             {
-                var session = debugger.CreateSession();
-                foreach (var key in debug.Split(','))
-                {
-                    session.ProcessDebug(key);
-                }
-                var dbg_info = "";
-                foreach (var info in session.DebugInfo)
-                {
-                    dbg_info += $"{info.Key}:\r\n";
-                    foreach (var item in info.Value)
-                    {
-                        dbg_info += $"\t{item}\r\n";
-                    }
-                }
-                await context.Response.WriteAsync(dbg_info).ConfigureAwait(true);
+                var session = await debugger.ProcessDebugAsync(debug.Split(',')).ConfigureAwait(true);
+                await context.Response.WriteAsync(session.DebugInfoString).ConfigureAwait(true);
             }
         }
     }

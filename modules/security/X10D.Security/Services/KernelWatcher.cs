@@ -17,17 +17,14 @@ namespace X10D.Security.Services
             Logger = logger;
         }
 
-        protected override ThreadStart MainProcess => 
+        protected override ThreadStart MainProcess =>
             () =>
             {
-                while (State != ServiceState.Stopping
-                    && State != ServiceState.Stopped
-                    && State != ServiceState.Blocking
-                    && State != ServiceState.Blocked)
+                CriticalWhile(() => true, () =>
                 {
                     Logger.LogInformation($"Kernel state: {Kernel.State}");
                     Thread.Sleep(1000);
-                }
+                });
             };
     }
 }

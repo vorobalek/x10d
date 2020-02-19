@@ -18,6 +18,6 @@ namespace X10D.Core.Services
         /// <returns></returns>
         bool ValidateToken(string token);
 
-        IList<IServicePrototype> Services { get; }
+        List<IServicePrototype> Services { get; }
     }
 }

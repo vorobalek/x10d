@@ -13,33 +13,31 @@ namespace X10D.Core.Services
     /// </summary>
     internal sealed class Activator : ServicePrototype, IActivator
     {
-        public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton; 
+        public override ServiceLifetime ServiceLifetime => ServiceLifetime.Transient;
         private IServiceProvider ServiceProvider { get; }
         public Activator(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            Idle();
-        }
-        protected override void PrepareService()
-        {
             implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
             inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
             Assemblies = ExtCore.Infrastructure.ExtensionManager.Assemblies?.ToList() ?? new List<Assembly>(new[] { Assembly.GetExecutingAssembly() });
-            base.PrepareService();
+            Idle();
         }
 
-        protected override void FlushService()
+        private static ConcurrentDictionary<Type, IEnumerable<Type>> implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private static ConcurrentDictionary<Type, IEnumerable<Type>> inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private static IList<Assembly> assemblies = new List<Assembly>();
+        public IList<Assembly> Assemblies
         {
-            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            Assemblies = new List<Assembly>();
-            base.FlushService();
+            get
+            {
+                return assemblies;
+            }
+            set
+            {
+                assemblies = value;
+            }
         }
-
-        private ConcurrentDictionary<Type, IEnumerable<Type>> implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-        private ConcurrentDictionary<Type, IEnumerable<Type>> inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-
-        public IList<Assembly> Assemblies { get; private set; } = new List<Assembly>();
         public IList<Type> GetTypes(Func<Type, bool> predicate = null)
         {
             if (predicate == null)
@@ -90,19 +88,19 @@ namespace X10D.Core.Services
         /// <returns></returns>
         public IEnumerable<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
-            if (useCaching && this.inheritors.ContainsKey(targetType))
-                return this.inheritors[targetType];
+            if (useCaching && inheritors.ContainsKey(targetType))
+                return inheritors[targetType];
 
-            List<Type> inheritors = new List<Type>();
+            List<Type> typeInheritors = new List<Type>();
 
             foreach (Type type in GetTypes(predicate))
                 if (targetType.GetTypeInfo().IsAssignableFrom(type))
-                    inheritors.Add(type);
+                    typeInheritors.Add(type);
 
             if (useCaching)
-                this.inheritors[targetType] = inheritors;
+                inheritors[targetType] = typeInheritors;
 
-            return inheritors;
+            return typeInheritors;
         }
 
         /// <summary>
@@ -194,19 +192,19 @@ namespace X10D.Core.Services
         /// <returns></returns>
         public IEnumerable<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
-            if (useCaching && this.implementations.ContainsKey(targetType))
-                return this.implementations[targetType];
+            if (useCaching && implementations.ContainsKey(targetType))
+                return implementations[targetType];
 
-            List<Type> implementations = new List<Type>();
+            List<Type> typeImplementations = new List<Type>();
 
             foreach (Type type in GetTypes(predicate))
                 if (targetType.GetTypeInfo().IsAssignableFrom(type) && type.GetTypeInfo().IsClass)
-                    implementations.Add(type);
+                    typeImplementations.Add(type);
 
             if (useCaching)
-                this.implementations[targetType] = implementations;
+                implementations[targetType] = typeImplementations;
 
-            return implementations;
+            return typeImplementations;
         }
 
         /// <summary>

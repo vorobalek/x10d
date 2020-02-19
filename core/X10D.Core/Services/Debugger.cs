@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
@@ -13,34 +14,13 @@ namespace X10D.Core.Services
         internal void Invoke(IDebuggerSessionFacade session) { session.AddDebugInfo(Key, "template"); }
     }
 
-    internal sealed class DebuggerSession : IDebuggerSession
+    internal sealed class DebuggerSession : ServicePrototype, IDebuggerSession
     {
-        private IDebugger Debugger { get; }
+        public override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
 
-        private IActivator Activator { get; }
+        Guid IDebuggerSessionFacade.SessionId { get; } = Guid.NewGuid();
 
-        public DebuggerSession(IDebugger debugger, IActivator activator)
-        {
-            Debugger = debugger;
-            Activator = activator;
-        }
-
-        void IDebuggerSession.ProcessDebug(string key)
-        {
-            if (Debugger.Components.TryGetValue(key, out var componentType))
-            {
-                var component = Activator.CreateInstance(componentType);
-                var componentMethod = component?.GetType().GetMethod(nameof(DebuggerComponent.Invoke));
-                var @params = componentMethod.GetParameters();
-                var args = @params
-                    .Select(p => p.ParameterType)
-                    .Select(type => type == typeof(IDebuggerSessionFacade) || type.GetInterfaces().Contains(typeof(IDebuggerSessionFacade))
-                    ? this
-                    : Activator.GetServiceOrCreateInstance(type));
-
-                componentMethod.Invoke(component, args.ToArray());
-            }
-        }
+        DateTime IDebuggerSessionFacade.CreationTime { get; } = DateTime.Now;
 
         IDictionary<string, IList<string>> IDebuggerSessionFacade.DebugInfo
         {
@@ -49,6 +29,26 @@ namespace X10D.Core.Services
                 return new Dictionary<string, IList<string>>(debugInfo);
             }
         }
+
+        string IDebuggerSession.DebugInfoString
+        {
+            get
+            {
+                var dbg_info = "";
+                foreach (var info in (this as IDebuggerSession).DebugInfo)
+                {
+                    dbg_info += $"{info.Key}:\r\n";
+                    foreach (var item in info.Value)
+                    {
+                        var tmp_item = string.Join("\r\n\t", item.Split("\r\n"));
+                        dbg_info += $"\t{tmp_item}\r\n";
+                    }
+                };
+                return dbg_info;
+            }
+        }
+
+        bool IDebuggerSessionFacade.IsTemporary { get; set; }
 
         void IDebuggerSessionFacade.AddDebugInfo(string key, string value)
         {
@@ -75,7 +75,7 @@ namespace X10D.Core.Services
     internal sealed class Debugger : ServicePrototype, IDebugger
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
-        
+
         private IActivator Activator { get; }
 
         public Debugger(IActivator activator)
@@ -98,21 +98,19 @@ namespace X10D.Core.Services
                 return new List<IDebuggerCompomnent>(componentsInfo);
             }
         }
-
-        IDebuggerSession IDebugger.CreateSession()
+        IList<IDebuggerSession> IDebugger.Sessions
         {
-            return Activator.CreateInstance<DebuggerSession>();
-        }
-
-        IDebuggerSessionFacade IDebuggerFacade.CreateSession()
-        {
-            return (this as IDebugger).CreateSession();
+            get
+            {
+                return new List<IDebuggerSession>(sessions);
+            }
         }
 
         protected override void FlushService()
         {
             components = new Dictionary<string, Type>();
             componentsInfo = new List<IDebuggerCompomnent>();
+            sessions = new List<IDebuggerSession>();
             base.FlushService();
         }
 
@@ -120,15 +118,14 @@ namespace X10D.Core.Services
         {
             components = new Dictionary<string, Type>();
             componentsInfo = new List<IDebuggerCompomnent>();
+            sessions = new List<IDebuggerSession>();
             var types = Activator.GetTypes(type =>
                 type.Name.Length > nameof(DebuggerComponent).Length
                 && type.Name.IndexOf(nameof(DebuggerComponent), StringComparison.InvariantCultureIgnoreCase) == type.Name.Length - nameof(DebuggerComponent).Length
                 && type.GetProperty(nameof(DebuggerComponent.Key)) != null
                 && type.GetProperty(nameof(DebuggerComponent.Key)).PropertyType == typeof(string)
                 && type.GetMethod(nameof(DebuggerComponent.Invoke)) != null
-                && type.GetMethod(nameof(DebuggerComponent.Invoke)).GetParameters().Length > 0
-                && (type.GetMethod(nameof(DebuggerComponent.Invoke)).GetParameters()[0].ParameterType == typeof(IDebuggerSessionFacade)
-                    || type.GetMethod(nameof(DebuggerComponent.Invoke)).GetParameters()[0].ParameterType.GetInterfaces().Contains(typeof(IDebuggerSessionFacade))));
+                && type.GetMethod(nameof(DebuggerComponent.Invoke)).GetParameters().Length > 0);
 
             foreach (var type in types)
             {
@@ -142,7 +139,44 @@ namespace X10D.Core.Services
             base.PrepareService();
         }
 
+        Task<IDebuggerSession> IDebugger.ProcessDebugAsync(string[] keys)
+        {
+            return Task.Run(() =>
+            {
+                using var scope = Activator.GetService<IServiceProvider>().CreateScope();
+                foreach (var key in keys)
+                {
+                    if (components.TryGetValue(key, out var componentType))
+                    {
+                        var component = ActivatorUtilities.CreateInstance(scope.ServiceProvider, componentType);
+                        var method = componentType.GetMethod(nameof(DebuggerComponent.Invoke));
+
+                        if (method != null)
+                        {
+                            var args = method.GetParameters()
+                                .Select(p => p.ParameterType)
+                                .Select(type => ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, type));
+
+                            method.Invoke(component, args.ToArray());
+                        }
+                    }
+                }
+                var session = scope.ServiceProvider.GetService<IDebuggerSession>();
+                if (!session.IsTemporary)
+                {
+                    sessions.Add(session);
+                }
+                return session;
+            });
+        }
+
+        async Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string[] keys)
+        {
+            return await (this as IDebugger).ProcessDebugAsync(keys).ConfigureAwait(true);
+        }
+
         private IDictionary<string, Type> components;
         private IList<IDebuggerCompomnent> componentsInfo;
+        private IList<IDebuggerSession> sessions;
     }
 }

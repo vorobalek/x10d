@@ -68,9 +68,6 @@ namespace X10D.Core.Extensions
             var activator = temp_service
                 .BuildServiceProvider()
                 .GetService<IActivator>();
-
-            ((IServicePrototype)activator).Flush().Wait();
-            ((IServicePrototype)activator).Prepare().Wait();
             
             var classTypes = activator.GetTypes(type =>
             {
@@ -115,6 +112,7 @@ namespace X10D.Core.Extensions
                 // add facades
                 services.AddSingleton(serviceProvider => (IKernelFacade)serviceProvider.GetService<IKernel>());
                 services.AddSingleton(serviceProvider => (IDebuggerFacade)serviceProvider.GetService<IDebugger>());
+                services.AddScoped(serviceProvider => (IDebuggerSessionFacade)serviceProvider.GetService<IDebuggerSession>());
 
                 var cache = resolver.GetService<IStoredCache>();
                 services.AddExtCore(

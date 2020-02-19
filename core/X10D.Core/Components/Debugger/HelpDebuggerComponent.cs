@@ -1,4 +1,5 @@
-﻿using X10D.Core.Services;
+﻿using System.Linq;
+using X10D.Core.Services;
 
 namespace X10D.Core.Components.Debugger
 {
@@ -9,7 +10,8 @@ namespace X10D.Core.Components.Debugger
 
         public void Invoke(IDebuggerSession session, IDebugger debugger)
         {
-            foreach (var component in debugger.ComponentsInfo)
+            var components = debugger.ComponentsInfo.OrderBy(component => component.Key);
+            foreach (var component in components)
             {
                 session.AddDebugInfo(Key, $"{component.Key}\t{component.Description}");
             }
