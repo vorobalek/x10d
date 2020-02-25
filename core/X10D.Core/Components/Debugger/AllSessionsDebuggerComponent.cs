@@ -17,7 +17,7 @@ namespace X10D.Core.Components.Debugger
             {
                 foreach (var s in sessions)
                 {
-                    session.AddDebugInfo($"{Key} ({s.SessionId}) - {s.CreationTime}.{s.CreationTime.Millisecond.ToString("000", new CultureInfo("en-EN"))}", s.DebugInfoString);
+                    session.AddDebugInfo($"{Key} - {s.Name ?? "noname"} ({s.UID}) - {s.CreationTime}.{s.CreationTime.Millisecond.ToString("000", new CultureInfo("en-EN"))}", s.DebugInfoString);
                 }
             }
             else

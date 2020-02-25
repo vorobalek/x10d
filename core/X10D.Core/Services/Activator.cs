@@ -8,36 +8,40 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    /// <summary>
-    /// Сервис создания объектов с использованием внедрения зависимостей.
-    /// </summary>
     internal sealed class Activator : ServicePrototype, IActivator
     {
+        private static ConcurrentDictionary<Type, IEnumerable<Type>> implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private static ConcurrentDictionary<Type, IEnumerable<Type>> inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private static IList<Assembly> assemblies  = new List<Assembly>();
+
+        protected override void FlushService()
+        {
+            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            assemblies = new List<Assembly>();
+
+            base.FlushService();
+        }
+
+        protected override void PrepareService()
+        {
+            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            assemblies = ExtCore.Infrastructure.ExtensionManager.Assemblies?.ToList() ?? new List<Assembly>(new[] { Assembly.GetExecutingAssembly() });
+
+            base.PrepareService();
+        }
+
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Transient;
         private IServiceProvider ServiceProvider { get; }
         public Activator(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            Assemblies = ExtCore.Infrastructure.ExtensionManager.Assemblies?.ToList() ?? new List<Assembly>(new[] { Assembly.GetExecutingAssembly() });
             Idle();
         }
 
-        private static ConcurrentDictionary<Type, IEnumerable<Type>> implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-        private static ConcurrentDictionary<Type, IEnumerable<Type>> inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-        private static IList<Assembly> assemblies = new List<Assembly>();
-        public IList<Assembly> Assemblies
-        {
-            get
-            {
-                return assemblies;
-            }
-            set
-            {
-                assemblies = value;
-            }
-        }
+        public IList<Assembly> Assemblies => new List<Assembly>(assemblies);
+
         public IList<Type> GetTypes(Func<Type, bool> predicate = null)
         {
             if (predicate == null)
@@ -45,47 +49,50 @@ namespace X10D.Core.Services
 
             return Assemblies.SelectMany(assembly => assembly.GetTypes()).Where(predicate).ToList();
         }
-        /// <summary>
-        /// Получить наследника типа <paramref name="targetType"/>
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
+
+        #region Inheritor
+
+        #region Template
+
+        public Type GetInheritor<T>(bool useCaching = true)
+        {
+            return GetInheritors<T>(useCaching).FirstOrDefault();
+        }
+
+        public Type GetInheritor<T>(Func<Type, bool> predicate, bool useCaching = true)
+        {
+            return GetInheritors<T>(predicate, useCaching).FirstOrDefault();
+        }
+
+        public IEnumerable<Type> GetInheritors<T>(bool useCaching = true)
+        {
+            return GetInheritors<T>(null, useCaching);
+        }
+
+        public IEnumerable<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true)
+        {
+            return GetInheritors(typeof(T), predicate, useCaching);
+        }
+
+        #endregion
+
+        #region Object
+
         public Type GetInheritor(Type targetType, bool useCaching = true)
         {
             return GetInheritors(targetType, useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить наследника типа <paramref name="targetType"/>, удовлетворяющую предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public Type GetInheritor(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             return GetInheritors(targetType, predicate, useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить всех наследников типа <paramref name="targetType"/>.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public IEnumerable<Type> GetInheritors(Type targetType, bool useCaching = true)
         {
             return GetInheritors(targetType, null, useCaching);
         }
 
-        /// <summary>
-        /// Получить всех наследников типа <paramref name="targetType"/>, удовлетворяющие предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public IEnumerable<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             if (useCaching && inheritors.ContainsKey(targetType))
@@ -103,93 +110,53 @@ namespace X10D.Core.Services
             return typeInheritors;
         }
 
-        /// <summary>
-        /// Получить наследника типа <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public Type GetInheritor<T>(bool useCaching = true)
+        #endregion
+
+        #endregion
+
+        #region Implementation
+
+        #region Template
+
+        public Type GetImplementation<T>(bool useCaching = true)
         {
-            return GetInheritors<T>(useCaching).FirstOrDefault();
+            return GetImplementations<T>(useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить наследника типа <typeparamref name="T"/>, удовлетворяющую предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public Type GetInheritor<T>(Func<Type, bool> predicate, bool useCaching = true)
+        public Type GetImplementation<T>(Func<Type, bool> predicate, bool useCaching = true)
         {
-            return GetInheritors<T>(predicate, useCaching).FirstOrDefault();
+            return GetImplementations<T>(predicate, useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить всех наследников типа <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<Type> GetInheritors<T>(bool useCaching = true)
+        public IEnumerable<Type> GetImplementations<T>(bool useCaching = true)
         {
-            return GetInheritors<T>(null, useCaching);
+            return GetImplementations<T>(null, useCaching);
         }
 
-        /// <summary>
-        /// Получить всех наследников типа <typeparamref name="T"/>, удовлетворяющие предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true)
+        public IEnumerable<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true)
         {
-            return GetInheritors(typeof(T), predicate, useCaching);
+            return GetImplementations(typeof(T), predicate, useCaching);
         }
 
-        /// <summary>
-        /// Получить реализацию типа <paramref name="targetType" />
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
+        #endregion
+
+        #region Object
+
         public Type GetImplementation(Type targetType, bool useCaching = true)
         {
             return GetImplementations(targetType, useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить реализацию типа <paramref name="targetType" />, удовлетворяющую предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public Type GetImplementation(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             return GetImplementations(targetType, predicate, useCaching).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить все реализации типа <paramref name="targetType" />.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public IEnumerable<Type> GetImplementations(Type targetType, bool useCaching = true)
         {
             return GetImplementations(targetType, null, useCaching);
         }
 
-        /// <summary>
-        /// Получить все реализации типа <paramref name="targetType" />, удовлетворяющие предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
         public IEnumerable<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             if (useCaching && implementations.ContainsKey(targetType))
@@ -207,152 +174,30 @@ namespace X10D.Core.Services
             return typeImplementations;
         }
 
-        /// <summary>
-        /// Получить экземпляр типа <paramref name="targetType" />.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public object GetInstance(Type targetType, bool useCaching = true)
+        #endregion
+
+        #endregion
+
+        #region Instance
+
+        #region Template
+
+        public T GetInstance<T>(bool useCaching = true, params object[] args)
         {
-            return GetInstance(targetType, null, useCaching);
+            return GetInstance<T>(null, useCaching, args);
         }
 
-        /// <summary>
-        /// Получить экземпляр типа <paramref name="targetType" />, удовлетворяющую предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public object GetInstance(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
+        public T GetInstance<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args)
         {
-            return GetInstances(targetType, predicate, useCaching).FirstOrDefault();
+            return GetInstances<T>(predicate, useCaching, args).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить все экземпляры типа <paramref name="targetType" />.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<object> GetInstances(Type targetType, bool useCaching = true)
+        public IEnumerable<T> GetInstances<T>(bool useCaching = true, params object[] args)
         {
-            return GetInstances(targetType, null, useCaching);
+            return GetInstances<T>(null, useCaching, args);
         }
 
-        /// <summary>
-        /// Получить все экземпляры типа <paramref name="targetType" />, удовлетворяющие предикату.
-        /// </summary>
-        /// <param name="targetType">Целевой тип.</param>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
-        {
-            List<object> instances = new List<object>();
-
-            foreach (Type implementation in GetImplementations(targetType, predicate, useCaching))
-            {
-                if (!implementation.GetTypeInfo().IsAbstract)
-                {
-                    var instance = ActivatorUtilities.GetServiceOrCreateInstance(ServiceProvider, implementation);
-
-                    instances.Add(instance);
-                }
-            }
-
-            return instances;
-        }
-
-        /// <summary>
-        /// Получить реализацию типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public Type GetImplementation<T>(bool useCaching = true)
-        {
-            return GetImplementations<T>(useCaching).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Получить реализацию типа <typeparamref name="T" />, удовлетворяющую предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public Type GetImplementation<T>(Func<Type, bool> predicate, bool useCaching = true)
-        {
-            return GetImplementations<T>(predicate, useCaching).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Получить все реализации типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<Type> GetImplementations<T>(bool useCaching = true)
-        {
-            return GetImplementations<T>(null, useCaching);
-        }
-
-        /// <summary>
-        /// Получить все реализации типа <typeparamref name="T" />, удовлетворяющие предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true)
-        {
-            return GetImplementations(typeof(T), predicate, useCaching);
-        }
-
-        /// <summary>
-        /// Получить экземпляр типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public T GetInstance<T>(bool useCaching = true)
-        {
-            return GetInstance<T>(null, useCaching);
-        }
-
-        /// <summary>
-        /// Получить экземпляр типа <typeparamref name="T" />, удовлетворяющую предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public T GetInstance<T>(Func<Type, bool> predicate, bool useCaching = true)
-        {
-            return GetInstances<T>(predicate, useCaching).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Получить все экземпляры типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<T> GetInstances<T>(bool useCaching = true)
-        {
-            return GetInstances<T>(null, useCaching);
-        }
-
-        /// <summary>
-        /// Получить все экземпляры типа <typeparamref name="T" />, удовлетворяющие предикату.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <param name="predicate">Предикат-функция.</param>
-        /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
-        /// <returns></returns>
-        public IEnumerable<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true)
+        public IEnumerable<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args)
         {
             List<T> instances = new List<T>();
 
@@ -360,7 +205,7 @@ namespace X10D.Core.Services
             {
                 if (!implementation.GetTypeInfo().IsAbstract)
                 {
-                    T instance = (T)ActivatorUtilities.GetServiceOrCreateInstance(ServiceProvider, implementation);
+                    T instance = GetServiceOrCreateInstance<T>(implementation, args);
 
                     instances.Add(instance);
                 }
@@ -369,64 +214,92 @@ namespace X10D.Core.Services
             return instances;
         }
 
-        /// <summary>
-        /// Получить сервис или создать экземпляр типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <returns></returns>
-        public T GetServiceOrCreateInstance<T>()
+        #endregion
+
+        #region Object
+
+        public object GetInstance(Type targetType, bool useCaching = true, params object[] args)
         {
-            return ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider);
+            return GetInstance(targetType, null, useCaching, args);
         }
 
-        /// <summary>
-        /// Получить сервис или создать экземпляр определенного типа.
-        /// </summary>
-        /// <param name="type">Целевой тип</param>
-        /// <returns></returns>
-        public object GetServiceOrCreateInstance(Type type)
+        public object GetInstance(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args)
         {
-            return ActivatorUtilities.GetServiceOrCreateInstance(ServiceProvider, type);
+            return GetInstances(targetType, predicate, useCaching, args).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Получить сервис типа <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <returns></returns>
+        public IEnumerable<object> GetInstances(Type targetType, bool useCaching = true, params object[] args)
+        {
+            return GetInstances(targetType, null, useCaching, args);
+        }
+
+        public IEnumerable<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args)
+        {
+            List<object> instances = new List<object>();
+
+            foreach (Type implementation in GetImplementations(targetType, predicate, useCaching))
+            {
+                if (!implementation.GetTypeInfo().IsAbstract)
+                {
+                    var instance = GetServiceOrCreateInstance(implementation, args);
+
+                    instances.Add(instance);
+                }
+            }
+
+            return instances;
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Service
+
+        #region Template
+
         public T GetService<T>()
         {
             return ServiceProvider.GetService<T>();
         }
 
-        /// <summary>
-        /// Получить сервис определенного типа.
-        /// </summary>
-        /// <param name="type">Целевой тип</param>
-        /// <returns></returns>
+        public T CreateInstance<T>(params object[] args)
+        {
+            return ActivatorUtilities.CreateInstance<T>(ServiceProvider, args);
+        }
+
+        public T GetServiceOrCreateInstance<T>(params object[] args)
+        {
+            return GetServiceOrCreateInstance<T>(typeof(T), args);
+        }
+
+        public T GetServiceOrCreateInstance<T>(Type type, params object[] args)
+        {
+            return GetService<T>() ?? (T)CreateInstance(type, args);
+        }
+
+        #endregion
+
+        #region Object
+
         public object GetService(Type type)
         {
             return ServiceProvider.GetService(type);
         }
 
-        /// <summary>
-        /// Создать экземпляр типа <typeparamref name="T" />.
-        /// </summary>
-        /// <typeparam name="T">Целевой тип</typeparam>
-        /// <returns></returns>
-        public T CreateInstance<T>()
+        public object CreateInstance(Type type, params object[] args)
         {
-            return ActivatorUtilities.CreateInstance<T>(ServiceProvider);
+            return ActivatorUtilities.CreateInstance(ServiceProvider, type, args);
         }
 
-        /// <summary>
-        /// Создать экземпляр определенного типа.
-        /// </summary>
-        /// <param name="type">Целевой тип</param>
-        /// <returns></returns>
-        public object CreateInstance(Type type)
+        public object GetServiceOrCreateInstance(Type type, params object[] args)
         {
-            return ActivatorUtilities.CreateInstance(ServiceProvider, type);
+            return GetService(type) ?? CreateInstance(type, args);
         }
+
+        #endregion
+
+        #endregion
+
     }
 }

@@ -8,6 +8,9 @@ namespace X10D.Infrastructure
 {
     public abstract class ServicePrototype : IServicePrototype
     {
+        Guid IServicePrototype.UID { get; } = Guid.NewGuid();
+        DateTime IServicePrototype.CreationTime { get; } = DateTime.Now;
+        
         Task IServicePrototype.Prepare()
         {
             return Task.Run(() =>
@@ -209,6 +212,7 @@ namespace X10D.Infrastructure
         private bool IsStable =>
             State != ServiceState.Blocking
             && State != ServiceState.Blocked;
+
         private event ServiceOnBeforeStateChangeFrom BeforeStateChangeFrom;
         private event ServiceOnBeforeStateChangeTo BeforeStateChangeTo;
         private event ServiceOnAfterStateChangeFrom AfterStateChangeFrom;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading.Tasks;
 
 namespace X10D.Infrastructure
@@ -8,24 +9,10 @@ namespace X10D.Infrastructure
     public delegate void ServiceOnAfterStateChangeFrom(ServiceState state);
     public delegate void ServiceOnAfterStateChangeTo(ServiceState state);
 
-    public enum ServiceState
-    {
-        Unknown,
-        Idles,
-        Preparing,
-        Prepared,
-        Running,
-        InProgress,
-        Stopping,
-        Stopped,
-        Flushing,
-        Flushed,
-        Blocking,
-        Blocked,
-    }
-
     public interface IServicePrototype
     {
+        Guid UID { get; }
+        DateTime CreationTime { get; }
         ServiceLifetime ServiceLifetime { get; }
         ServiceState State { get; }
         Task Prepare();

@@ -60,8 +60,8 @@ namespace X10D.Core.Services
 
         protected override void PrepareService()
         {
-            var services = Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)));
-            Services.AddRange(services);
+            Services.AddRange(Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade))));
+            
             Services.ForEach(service => serviceStateListeners.Add(service, (state) => service.LogServiceChangeState(Logger, state)));
             var tasks = Services.Select(service => service.AddOnAfterStateChange(null, serviceStateListeners.GetValueOrDefault(service).Invoke).Prepare());
             Task.WaitAll(tasks.ToArray());

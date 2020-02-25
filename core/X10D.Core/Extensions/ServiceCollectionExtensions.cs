@@ -61,14 +61,17 @@ namespace X10D.Core.Extensions
 
         private static IServiceCollection AddPrototypedServices(this IServiceCollection services)
         {
-            var temp_service = new ServiceCollection()
+            var tempServices = new ServiceCollection()
                 .Add(services)
                 .AddSingleton<IActivator, Activator>();
 
-            var activator = temp_service
+            var activator = tempServices
                 .BuildServiceProvider()
                 .GetService<IActivator>();
-            
+
+            (activator as IServicePrototype).Flush().Wait();
+            (activator as IServicePrototype).Prepare().Wait();
+
             var classTypes = activator.GetTypes(type =>
             {
                 return new[]
@@ -82,15 +85,15 @@ namespace X10D.Core.Extensions
             foreach (var classType in classTypes)
             {
                 var interfaceType = classType.GetInterfaces().OrderBy(type => type.GetInterfaces().Length).Last();
-                temp_service.Add(new ServiceDescriptor(interfaceType, classType, ServiceLifetime.Singleton));
+                tempServices.Add(new ServiceDescriptor(interfaceType, classType, ServiceLifetime.Singleton));
             }
             
-            var temp_resolver = temp_service.BuildServiceProvider();
+            var tempResolver = tempServices.BuildServiceProvider();
             
             foreach (var classType in classTypes)
             {
                 var interfaceType = classType.GetInterfaces().OrderBy(type => type.GetInterfaces().Length).Last();
-                var prototype = temp_resolver.GetService(interfaceType) as IServicePrototype;
+                var prototype = tempResolver.GetService(interfaceType) as IServicePrototype;
                 services.Add(new ServiceDescriptor(interfaceType, classType, prototype.ServiceLifetime));
                 
                 // adding all services as prototypes
@@ -105,8 +108,8 @@ namespace X10D.Core.Extensions
 
         private static IServiceCollection TryAddExtCore(this IServiceCollection services)
         {
-            var resolver = new ServiceCollection().Add(services).AddPrototypedServices().BuildServiceProvider();
-            var kernel = resolver.GetService<IKernel>();
+            var tempRresolver = new ServiceCollection().Add(services).AddPrototypedServices().BuildServiceProvider();
+            var kernel = tempRresolver.GetService<IKernel>();
             if (kernel != null)
             {
                 // add facades
@@ -114,10 +117,10 @@ namespace X10D.Core.Extensions
                 services.AddSingleton(serviceProvider => (IDebuggerFacade)serviceProvider.GetService<IDebugger>());
                 services.AddScoped(serviceProvider => (IDebuggerSessionFacade)serviceProvider.GetService<IDebuggerSession>());
 
-                var cache = resolver.GetService<IStoredCache>();
+                var cache = tempRresolver.GetService<IStoredCache>();
                 services.AddExtCore(
-                    Path.Combine(Directory.GetCurrentDirectory(), cache["modules.path"] ?? ""),
-                    cache["modules.recursive"] == true.ToString(new CultureInfo("en-US")));
+                    Path.Combine(Directory.GetCurrentDirectory(), cache["modules.path"] ?? "modules"),
+                    (cache["modules.recursive"] ?? "true").ToLower(new CultureInfo("en-US")) == "true");
                 services.AddPrototypedServices();
                 return services;
             }
