@@ -52,18 +52,15 @@ namespace X10D.Core.Services
             var tasks = Services.Select(service => service.Flush());
             Task.WaitAll(tasks.ToArray());
 
-            Services.ForEach(service => service.RemoveOnAfterStateChange(null, serviceStateListeners.GetValueOrDefault(service).Invoke));
+            Services.ForEach(service => service.RemoveOnStateChange(OnServiceStateChange));
             Services.Clear();
-            serviceStateListeners.Clear();
             base.FlushService();
         }
 
         protected override void PrepareService()
         {
             Services.AddRange(Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade))));
-            
-            Services.ForEach(service => serviceStateListeners.Add(service, (state) => service.LogServiceChangeState(Logger, state)));
-            var tasks = Services.Select(service => service.AddOnAfterStateChange(null, serviceStateListeners.GetValueOrDefault(service).Invoke).Prepare());
+            var tasks = Services.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare());
             Task.WaitAll(tasks.ToArray());
 
             base.PrepareService();
@@ -100,7 +97,11 @@ namespace X10D.Core.Services
             (this as IServicePrototype).Stop().Wait();
             (this as IServicePrototype).Flush().Wait();
         }
-
-        private readonly Dictionary<IServicePrototype, Action<ServiceState>> serviceStateListeners = new Dictionary<IServicePrototype, Action<ServiceState>>();
+        
+        private void OnServiceStateChange(object sender, ServiceStateChangeEventArgs args)
+        {
+            var service = sender as IServicePrototype;
+            Logger.LogWarning($"{service.GetType().GetFullName()} {(args.StateChanged ? "changed" : "changing")} [{args.OldValue}] => [{args.NewValue}]");
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace X10D.Infrastructure
     {
         Guid IServicePrototype.UID { get; } = Guid.NewGuid();
         DateTime IServicePrototype.CreationTime { get; } = DateTime.Now;
-        
+
         Task IServicePrototype.Prepare()
         {
             return Task.Run(() =>
@@ -86,28 +86,14 @@ namespace X10D.Infrastructure
                 AnyWay(() => SetState(ServiceState.Blocked));
             });
         }
-        IServicePrototype IServicePrototype.AddOnBeforeStateChange(ServiceOnBeforeStateChangeFrom onBeforeStateChangeFrom, ServiceOnBeforeStateChangeTo onBeforeStateChangeTo)
+        IServicePrototype IServicePrototype.AddOnStateChange(ServiceStateChangeEventHandler handler)
         {
-            BeforeStateChangeFrom += onBeforeStateChangeFrom;
-            BeforeStateChangeTo += onBeforeStateChangeTo;
+            ServiceChangeStateEvent += handler;
             return this;
         }
-        IServicePrototype IServicePrototype.AddOnAfterStateChange(ServiceOnAfterStateChangeFrom onAfterStateChangeFrom, ServiceOnAfterStateChangeTo onAfterStateChangeTo)
+        IServicePrototype IServicePrototype.RemoveOnStateChange(ServiceStateChangeEventHandler handler)
         {
-            AfterStateChangeFrom += onAfterStateChangeFrom;
-            AfterStateChangeTo += onAfterStateChangeTo;
-            return this;
-        }
-        IServicePrototype IServicePrototype.RemoveOnBeforeStateChange(ServiceOnBeforeStateChangeFrom onBeforeStateChangeFrom, ServiceOnBeforeStateChangeTo onBeforeStateChangeTo)
-        {
-            BeforeStateChangeFrom -= onBeforeStateChangeFrom;
-            BeforeStateChangeTo -= onBeforeStateChangeTo;
-            return this;
-        }
-        IServicePrototype IServicePrototype.RemoveOnAfterStateChange(ServiceOnAfterStateChangeFrom onAfterStateChangeFrom, ServiceOnAfterStateChangeTo onAfterStateChangeTo)
-        {
-            AfterStateChangeFrom -= onAfterStateChangeFrom;
-            AfterStateChangeTo -= onAfterStateChangeTo;
+            ServiceChangeStateEvent -= handler;
             return this;
         }
         public abstract ServiceLifetime ServiceLifetime { get; }
@@ -201,32 +187,26 @@ namespace X10D.Infrastructure
         }
         protected T Critical<T>(Func<T> func, object locker = null)
         {
-            lock(locker ?? baseLocker)
+            lock (locker ?? baseLocker)
             {
                 return func();
             }
         }
 
+        private event ServiceStateChangeEventHandler ServiceChangeStateEvent;
         private object threadId;
         private readonly object baseLocker = new object();
         private bool IsStable =>
             State != ServiceState.Blocking
             && State != ServiceState.Blocked;
-
-        private event ServiceOnBeforeStateChangeFrom BeforeStateChangeFrom;
-        private event ServiceOnBeforeStateChangeTo BeforeStateChangeTo;
-        private event ServiceOnAfterStateChangeFrom AfterStateChangeFrom;
-        private event ServiceOnAfterStateChangeTo AfterStateChangeTo;
-        private void SetState(ServiceState value)
+        private void SetState(ServiceState newValue)
         {
             Critical(() =>
             {
-                BeforeStateChangeFrom?.Invoke(State);
-                BeforeStateChangeTo?.Invoke(value);
-                var old_state = State;
-                State = value;
-                AfterStateChangeFrom?.Invoke(old_state);
-                AfterStateChangeTo?.Invoke(State);
+                var oldValue = State;
+                ServiceChangeStateEvent?.Invoke(this, new ServiceStateChangeEventArgs(oldValue, newValue, false));
+                State = newValue;
+                ServiceChangeStateEvent?.Invoke(this, new ServiceStateChangeEventArgs(oldValue, newValue, true));
             }, State);
         }
         private Thread thread;
