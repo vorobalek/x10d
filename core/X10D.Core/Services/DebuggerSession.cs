@@ -16,10 +16,6 @@ namespace X10D.Core.Services
             {
                 return new Dictionary<string, IList<string>>(debugInfo);
             }
-            private set
-            {
-                debugInfo = value;
-            }
         }
 
         public string DebugInfoString

@@ -22,7 +22,7 @@ namespace X10D.Core.Middleware
             {
                 var timeStart = DateTime.Now;
                 var session = await debugger.ProcessDebugAsync(debug.Split(',')).ConfigureAwait(true);
-                session.AddDebugInfo("debugger", $"debug time: {(DateTime.Now - timeStart).TotalMilliseconds} ms.");
+                session.AddDebugInfo("debug time", $"{(DateTime.Now - timeStart).TotalMilliseconds} ms.");
                 session.Name = nameof(DebuggerMiddleware);
                 await context.Response.WriteAsync("\r\n" + session.DebugInfoString).ConfigureAwait(true);
             }

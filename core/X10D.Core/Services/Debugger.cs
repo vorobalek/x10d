@@ -26,10 +26,6 @@ namespace X10D.Core.Services
             {
                 return new Dictionary<string, Type>(components);
             }
-            private set
-            {
-                components = value;
-            }
         }
 
         private IList<IDebuggerCompomnentInfo> componentsInfo;
@@ -39,10 +35,6 @@ namespace X10D.Core.Services
             {
                 return new List<IDebuggerCompomnentInfo>(componentsInfo);
             }
-            private set
-            {
-                componentsInfo = value;
-            }
         }
 
         private IList<IDebuggerSession> sessions;
@@ -51,10 +43,6 @@ namespace X10D.Core.Services
             get
             {
                 return new List<IDebuggerSession>(sessions);
-            }
-            private set
-            {
-                sessions = value;
             }
         }
 
@@ -118,7 +106,7 @@ namespace X10D.Core.Services
 
             foreach (var type in types)
             {
-                var componentObj = Activator.CreateInstance(type);
+                var componentObj = Activator.GetServiceOrCreateInstance(type);
                 var componentKey = type.GetProperty(nameof(DebuggerComponent.Key))?.GetValue(componentObj) as string;
                 var componentDescription = type.GetProperty(nameof(DebuggerComponent.Description))?.GetValue(componentObj) as string ?? "without description";
 
