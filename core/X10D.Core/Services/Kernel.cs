@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using X10D.Core.Extensions;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
@@ -16,9 +15,6 @@ namespace X10D.Core.Services
         private ILogger Logger { get; }
         private IServiceScope Scope { get; }
         public List<IServicePrototype> Services { get; } = new List<IServicePrototype>();
-
-        private Guid token = Guid.NewGuid();
-        
         public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger)
         {
             Scope = serviceProvider.CreateScope();
@@ -42,6 +38,7 @@ namespace X10D.Core.Services
 ------------------------------------------");
         }
 
+        private Guid token = Guid.NewGuid();
         public bool ValidateToken(string candidate)
         {
             return Guid.TryParse(candidate, out var guid_candidate) && guid_candidate == token;
