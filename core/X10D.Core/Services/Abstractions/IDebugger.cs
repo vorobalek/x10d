@@ -7,9 +7,10 @@ namespace X10D.Core.Services
 {
     internal interface IDebugger : IDebuggerFacade
     {
-        IDictionary<string, Type> Components { get; }
-        IList<IDebuggerCompomnentInfo> ComponentsInfo { get; }
-        IList<IDebuggerSession> Sessions { get; }
+        IReadOnlyDictionary<string, Type> Components { get; }
+        IReadOnlyList<IDebuggerCompomnentInfo> ComponentsInfo { get; }
+        IReadOnlyList<IDebuggerSession> Sessions { get; }
         new Task<IDebuggerSession> ProcessDebugAsync(string[] keys);
+        new Task<IDebuggerSession> ProcessDebugAsync(string session_name, string[] keys);
     }
 }

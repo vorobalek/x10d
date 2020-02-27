@@ -20,33 +20,33 @@ namespace X10D.Core.Services
         }
 
         private IDictionary<string, Type> components;
-        public IDictionary<string, Type> Components
+        public IReadOnlyDictionary<string, Type> Components
         {
             get
             {
-                return new Dictionary<string, Type>(components);
+                return components.ToDictionary(kv => kv.Key, kv => kv.Value) as IReadOnlyDictionary<string, Type>;
             }
         }
 
         private IList<IDebuggerCompomnentInfo> componentsInfo;
-        public IList<IDebuggerCompomnentInfo> ComponentsInfo
+        public IReadOnlyList<IDebuggerCompomnentInfo> ComponentsInfo
         {
             get
             {
-                return new List<IDebuggerCompomnentInfo>(componentsInfo);
+                return componentsInfo.ToList().AsReadOnly();
             }
         }
 
         private IList<IDebuggerSession> sessions;
-        public IList<IDebuggerSession> Sessions
+        public IReadOnlyList<IDebuggerSession> Sessions
         {
             get
             {
-                return new List<IDebuggerSession>(sessions);
+                return sessions.ToList().AsReadOnly();
             }
         }
-
-        public Task<IDebuggerSession> ProcessDebugAsync(string[] keys)
+        public Task<IDebuggerSession> ProcessDebugAsync(string[] keys) => ProcessDebugAsync(null, keys);
+        public Task<IDebuggerSession> ProcessDebugAsync(string session_name, string[] keys)
         {
             return Task.Run(() =>
             {
@@ -72,15 +72,17 @@ namespace X10D.Core.Services
                 var session = activator.GetServiceOrCreateInstance<IDebuggerSession>();
                 if (!session.IsTemporary)
                 {
+                    session.SetName(session_name);
                     sessions.Add(session);
                 }
                 return session;
             });
         }
 
-        async Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string[] keys)
+        Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string[] keys) => (this as IDebuggerFacade).ProcessDebugAsync(null, keys);
+        async Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string session_name, string[] keys)
         {
-            return await (this as IDebugger).ProcessDebugAsync(keys).ConfigureAwait(true);
+            return await (this as IDebugger).ProcessDebugAsync(session_name, keys).ConfigureAwait(true);
         }
 
         protected override void FlushService()

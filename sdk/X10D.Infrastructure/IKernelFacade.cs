@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace X10D.Infrastructure
+﻿namespace X10D.Infrastructure
 {
-    public interface IKernelFacade : IServicePrototype, IDisposable
+    public interface IKernelFacade : IServicePrototype
     {
     }
 }

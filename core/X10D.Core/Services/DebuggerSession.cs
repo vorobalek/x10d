@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using System.Linq;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
@@ -7,14 +8,14 @@ namespace X10D.Core.Services
     internal sealed class DebuggerSession : ServicePrototype, IDebuggerSession
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
-        public string Name { get; set; }
+        public string Name { get; private set; }
 
         private IDictionary<string, IList<string>> debugInfo = new Dictionary<string, IList<string>>();
-        public IDictionary<string, IList<string>> DebugInfo
+        public IReadOnlyDictionary<string, IReadOnlyList<string>> DebugInfo
         {
             get
             {
-                return new Dictionary<string, IList<string>>(debugInfo);
+                return debugInfo.ToDictionary(kv => kv.Key, kv => kv.Value as IReadOnlyList<string>) as IReadOnlyDictionary<string, IReadOnlyList<string>>;
             }
         }
 
@@ -55,6 +56,10 @@ namespace X10D.Core.Services
             {
                 debugInfo.Add(key, new List<string>(new[] { value }));
             }
+        }
+        public void SetName(string name)
+        {
+            Name = name;
         }
     }
 }

@@ -21,9 +21,8 @@ namespace X10D.Core.Middleware
             if (context.Request.Query.TryGetValue("debug", out var debugObj) && debugObj.Count > 0 && debugObj[0] is string debug)
             {
                 var timeStart = DateTime.Now;
-                var session = await debugger.ProcessDebugAsync(debug.Split(',')).ConfigureAwait(true);
+                var session = await debugger.ProcessDebugAsync(nameof(DebuggerMiddleware), debug.Split(',')).ConfigureAwait(true);
                 session.AddDebugInfo("debug time", $"{(DateTime.Now - timeStart).TotalMilliseconds} ms.");
-                session.Name = nameof(DebuggerMiddleware);
                 await context.Response.WriteAsync("\r\n" + session.DebugInfoString).ConfigureAwait(true);
             }
         }

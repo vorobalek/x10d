@@ -5,5 +5,6 @@ namespace X10D.Core.Services
     internal interface IDebuggerSession : IDebuggerSessionFacade, IServicePrototype
     {
         string DebugInfoString { get; }
+        void SetName(string name);
     }
 }

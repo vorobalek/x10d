@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using X10D.Core.Services;
+using X10D.Infrastructure;
 
 namespace X10D.Core.Components.Protection
 {
