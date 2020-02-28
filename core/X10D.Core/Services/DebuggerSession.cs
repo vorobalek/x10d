@@ -5,7 +5,7 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class DebuggerSession : ServicePrototype, IDebuggerSession
+    internal sealed class DebuggerSession : ServicePrototype<IDebuggerSession>, IDebuggerSession
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
         public string Name { get; private set; }

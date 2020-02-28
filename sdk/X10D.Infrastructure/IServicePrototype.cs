@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 
 namespace X10D.Infrastructure
 {
-    public delegate void ServiceStateChangeEventHandler(object sender, ServiceStateChangeEventArgs args);
+    public delegate void ServiceStateChangeEventHandler(IServicePrototype sender, ServiceStateChangeEventArgs args);
 
-    public interface IServicePrototype
+    public interface IServicePrototype : IDisposable
     {
+        Type InterfaceType { get; }
         Guid UID { get; }
         DateTime CreationTime { get; }
         ServiceLifetime ServiceLifetime { get; }

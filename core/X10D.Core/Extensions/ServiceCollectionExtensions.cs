@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -35,7 +36,11 @@ namespace X10D.Core.Extensions
                 })
 
                 .AddEntityFrameworkSqlite()
-                .AddDbContext<StoredCacheContext>(o => o.UseSqlite("Filename=cache.db"), ServiceLifetime.Singleton)
+                .AddDbContext<StoredCacheContext>(o =>
+                {
+                    o.UseSqlite("Filename=cache.db");
+                    o.UseInternalServiceProvider(services.BuildServiceProvider());
+                }, ServiceLifetime.Singleton)
                 .AddSingleton<IStartupFilter, KernelStartupFilter>()
                 .AddHttpContextAccessor()
                 .AddAuthentication(options =>
@@ -55,6 +60,7 @@ namespace X10D.Core.Extensions
                 .AddControllersWithViews();
 
             services
+                .AddSingleton<IAssemblyProvider, AssemblyProvider>()
                 .TryAddExtCore();
             return services;
         }
@@ -63,7 +69,7 @@ namespace X10D.Core.Extensions
         {
             var tempServices = new ServiceCollection()
                 .Add(services)
-                .AddSingleton<IActivator, Activator>();
+                .AddSingleton<IActivator, Services.Activator>();
 
             var activator = tempServices
                 .BuildServiceProvider()
@@ -72,7 +78,7 @@ namespace X10D.Core.Extensions
             (activator as IServicePrototype).Flush().Wait();
             (activator as IServicePrototype).Prepare().Wait();
 
-            var classTypes = activator.GetTypes(type =>
+            var serviceTypes = activator.GetTypes(type =>
             {
                 return new[]
                 {
@@ -81,34 +87,34 @@ namespace X10D.Core.Extensions
                     !type.IsInterface,
                 }.All(flag => flag);
             });
-            
-            foreach (var classType in classTypes)
+
+            foreach (var serviceType in serviceTypes)
             {
-                var interfaceType = classType.GetInterfaces().OrderBy(type => type.GetInterfaces().Length).Last();
-                tempServices.Add(new ServiceDescriptor(interfaceType, classType, ServiceLifetime.Singleton));
-            }
-            
-            var tempResolver = tempServices.BuildServiceProvider();
-            
-            foreach (var classType in classTypes)
-            {
-                var interfaceType = classType.GetInterfaces().OrderBy(type => type.GetInterfaces().Length).Last();
-                var prototype = tempResolver.GetService(interfaceType) as IServicePrototype;
-                services.Add(new ServiceDescriptor(interfaceType, classType, prototype.ServiceLifetime));
-                
-                // adding all services as prototypes
-                if (interfaceType != typeof(IServicePrototype))
+                var serviceEmpty = activator.CreateEmpty<IServicePrototype>(serviceType);
+                if (serviceEmpty.InterfaceType != null)
                 {
-                    services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceProvider => serviceProvider.GetService(interfaceType), prototype.ServiceLifetime));
+                    services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceType, serviceEmpty.ServiceLifetime));
+                }
+
+                // adding all services as prototypes
+                if (serviceEmpty.InterfaceType != null && 
+                    serviceEmpty.InterfaceType != typeof(IServicePrototype))
+                {
+                    services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceProvider => serviceProvider.GetService(serviceEmpty.InterfaceType), serviceEmpty.ServiceLifetime));
+                }
+                else
+                {
+                    services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceType, serviceEmpty.ServiceLifetime));
                 }
             }
-            
+
             return services;
         }
 
         private static IServiceCollection TryAddExtCore(this IServiceCollection services)
         {
-            var tempRresolver = new ServiceCollection().Add(services).AddPrototypedServices().BuildServiceProvider();
+            var tempServices = new ServiceCollection().Add(services).AddPrototypedServices();
+            var tempRresolver = tempServices.BuildServiceProvider();
             var kernel = tempRresolver.GetService<IKernel>();
             if (kernel != null)
             {
@@ -118,10 +124,15 @@ namespace X10D.Core.Extensions
                 services.AddScoped(serviceProvider => (IDebuggerSessionFacade)serviceProvider.GetService<IDebuggerSession>());
 
                 var cache = tempRresolver.GetService<IStoredCache>();
-                services.AddExtCore(
+                var assemblyProvider = tempRresolver.GetService<IAssemblyProvider>();
+                services
+                    .AddExtCore(
                     Path.Combine(Directory.GetCurrentDirectory(), cache["modules.path"] ?? "modules"),
-                    (cache["modules.recursive"] ?? "true").ToLower(new CultureInfo("en-US")) == "true");
-                services.AddPrototypedServices();
+                    (cache["modules.recursive"] ?? "true").ToLower(new CultureInfo("en-US")) == "true",
+                    assemblyProvider);
+                services
+                    .AddPrototypedServices()
+                    .AddSingleton(assemblyProvider);
                 return services;
             }
             else

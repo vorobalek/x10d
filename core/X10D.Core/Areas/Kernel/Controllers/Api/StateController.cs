@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using X10D.Core.Services;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Areas.Kernel.Controllers.Api
@@ -7,10 +8,12 @@ namespace X10D.Core.Areas.Kernel.Controllers.Api
     [Route("/kernel/api/[controller]")]
     public class StateController : ControllerBase
     {
-        Services.IKernel Kernel { get; }
+        IKernel Kernel { get; }
+        IAssemblyProvider AssemblyProvider { get; }
         public StateController(IActivator activator)
         {
-            Kernel = activator.GetService<Services.IKernel>();
+            Kernel = activator.GetService<IKernel>();
+            AssemblyProvider = activator.GetService<IAssemblyProvider>();
         }
 
         public string Get()
@@ -24,6 +27,9 @@ namespace X10D.Core.Areas.Kernel.Controllers.Api
         {
             await Kernel.Stop().ConfigureAwait(true);
             await Kernel.Flush().ConfigureAwait(true);
+
+            //AssemblyProvider.ModulesContext.Unload();
+            
             await Kernel.Prepare().ConfigureAwait(true);
             await Kernel.Start().ConfigureAwait(true);
         }

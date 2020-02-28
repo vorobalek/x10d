@@ -4,7 +4,7 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class StoredCache : ServicePrototype, IStoredCache
+    internal sealed class StoredCache : ServicePrototype<IStoredCache>, IStoredCache
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
         private StoredCacheContext Cache { get; }

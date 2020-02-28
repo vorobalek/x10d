@@ -4,20 +4,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class Activator : ServicePrototype, IActivator
+    internal sealed class Activator : ServicePrototype<IActivator>, IActivator
     {
-        private static ConcurrentDictionary<Type, IEnumerable<Type>> implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-        private static ConcurrentDictionary<Type, IEnumerable<Type>> inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-        private static IList<Assembly> assemblies  = new List<Assembly>();
+        private static ConcurrentDictionary<Type, List<Type>> implementations = new ConcurrentDictionary<Type, List<Type>>();
+        private static ConcurrentDictionary<Type, List<Type>> inheritors = new ConcurrentDictionary<Type, List<Type>>();
+        private static List<Assembly> assemblies  = new List<Assembly>();
 
         protected override void FlushService()
         {
-            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            implementations = new ConcurrentDictionary<Type, List<Type>>();
+            inheritors = new ConcurrentDictionary<Type, List<Type>>();
             assemblies = new List<Assembly>();
 
             base.FlushService();
@@ -25,8 +26,8 @@ namespace X10D.Core.Services
 
         protected override void PrepareService()
         {
-            implementations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
-            inheritors = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+            implementations = new ConcurrentDictionary<Type, List<Type>>();
+            inheritors = new ConcurrentDictionary<Type, List<Type>>();
             assemblies = ExtCore.Infrastructure.ExtensionManager.Assemblies?.ToList() ?? new List<Assembly>(new[] { Assembly.GetExecutingAssembly() });
 
             base.PrepareService();
@@ -40,14 +41,14 @@ namespace X10D.Core.Services
             Idle();
         }
 
-        public IList<Assembly> Assemblies => new List<Assembly>(assemblies);
+        public IReadOnlyList<Assembly> Assemblies => assemblies.AsReadOnly();
 
-        public IList<Type> GetTypes(Func<Type, bool> predicate = null)
+        public IReadOnlyList<Type> GetTypes(Func<Type, bool> predicate = null)
         {
             if (predicate == null)
-                return Assemblies.SelectMany(assembly => assembly.GetTypes()).ToList();
+                return Assemblies.SelectMany(assembly => assembly.GetTypes()).ToList().AsReadOnly();
 
-            return Assemblies.SelectMany(assembly => assembly.GetTypes()).Where(predicate).ToList();
+            return Assemblies.SelectMany(assembly => assembly.GetTypes()).Where(predicate).ToList().AsReadOnly();
         }
 
         #region Inheritor
@@ -64,12 +65,12 @@ namespace X10D.Core.Services
             return GetInheritors<T>(predicate, useCaching).FirstOrDefault();
         }
 
-        public IEnumerable<Type> GetInheritors<T>(bool useCaching = true)
+        public IReadOnlyList<Type> GetInheritors<T>(bool useCaching = true)
         {
             return GetInheritors<T>(null, useCaching);
         }
 
-        public IEnumerable<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true)
+        public IReadOnlyList<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true)
         {
             return GetInheritors(typeof(T), predicate, useCaching);
         }
@@ -88,15 +89,15 @@ namespace X10D.Core.Services
             return GetInheritors(targetType, predicate, useCaching).FirstOrDefault();
         }
 
-        public IEnumerable<Type> GetInheritors(Type targetType, bool useCaching = true)
+        public IReadOnlyList<Type> GetInheritors(Type targetType, bool useCaching = true)
         {
             return GetInheritors(targetType, null, useCaching);
         }
 
-        public IEnumerable<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
+        public IReadOnlyList<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             if (useCaching && inheritors.ContainsKey(targetType))
-                return inheritors[targetType];
+                return inheritors[targetType].AsReadOnly();
 
             List<Type> typeInheritors = new List<Type>();
 
@@ -128,12 +129,12 @@ namespace X10D.Core.Services
             return GetImplementations<T>(predicate, useCaching).FirstOrDefault();
         }
 
-        public IEnumerable<Type> GetImplementations<T>(bool useCaching = true)
+        public IReadOnlyList<Type> GetImplementations<T>(bool useCaching = true)
         {
             return GetImplementations<T>(null, useCaching);
         }
 
-        public IEnumerable<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true)
+        public IReadOnlyList<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true)
         {
             return GetImplementations(typeof(T), predicate, useCaching);
         }
@@ -152,15 +153,15 @@ namespace X10D.Core.Services
             return GetImplementations(targetType, predicate, useCaching).FirstOrDefault();
         }
 
-        public IEnumerable<Type> GetImplementations(Type targetType, bool useCaching = true)
+        public IReadOnlyList<Type> GetImplementations(Type targetType, bool useCaching = true)
         {
             return GetImplementations(targetType, null, useCaching);
         }
 
-        public IEnumerable<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
+        public IReadOnlyList<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
             if (useCaching && implementations.ContainsKey(targetType))
-                return implementations[targetType];
+                return implementations[targetType].AsReadOnly();
 
             List<Type> typeImplementations = new List<Type>();
 
@@ -192,12 +193,12 @@ namespace X10D.Core.Services
             return GetInstances<T>(predicate, useCaching, args).FirstOrDefault();
         }
 
-        public IEnumerable<T> GetInstances<T>(bool useCaching = true, params object[] args)
+        public IReadOnlyList<T> GetInstances<T>(bool useCaching = true, params object[] args)
         {
             return GetInstances<T>(null, useCaching, args);
         }
 
-        public IEnumerable<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args)
+        public IReadOnlyList<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args)
         {
             List<T> instances = new List<T>();
 
@@ -228,12 +229,12 @@ namespace X10D.Core.Services
             return GetInstances(targetType, predicate, useCaching, args).FirstOrDefault();
         }
 
-        public IEnumerable<object> GetInstances(Type targetType, bool useCaching = true, params object[] args)
+        public IReadOnlyList<object> GetInstances(Type targetType, bool useCaching = true, params object[] args)
         {
             return GetInstances(targetType, null, useCaching, args);
         }
 
-        public IEnumerable<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args)
+        public IReadOnlyList<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args)
         {
             List<object> instances = new List<object>();
 
@@ -263,9 +264,24 @@ namespace X10D.Core.Services
             return ServiceProvider.GetService<T>();
         }
 
+        public T CreateEmpty<T>()
+        {
+            return (T)CreateEmpty(typeof(T));
+        }
+
+        public T CreateEmpty<T>(Type type)
+        {
+            return (T)CreateEmpty(type);
+        }
+
         public T CreateInstance<T>(params object[] args)
         {
-            return ActivatorUtilities.CreateInstance<T>(ServiceProvider, args);
+            return CreateInstance<T>(typeof(T), args);
+        }
+
+        public T CreateInstance<T>(Type type, params object[] args)
+        {
+            return (T)CreateInstance(type, args);
         }
 
         public T GetServiceOrCreateInstance<T>(params object[] args)
@@ -285,6 +301,11 @@ namespace X10D.Core.Services
         public object GetService(Type type)
         {
             return ServiceProvider.GetService(type);
+        }
+
+        public object CreateEmpty(Type type)
+        {
+            return FormatterServices.GetUninitializedObject(type);
         }
 
         public object CreateInstance(Type type, params object[] args)

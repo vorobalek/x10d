@@ -9,17 +9,20 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class Kernel : ServicePrototype, IKernel
+    internal sealed class Kernel : ServicePrototype<IKernel>, IKernel
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
+        private IServiceProvider ServiceProvider { get; }
         private ILogger Logger { get; }
+        private IAssemblyProvider AssemblyProvider { get; }
         private IServiceScope Scope { get; }
         public List<IServicePrototype> Services { get; } = new List<IServicePrototype>();
-        public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger)
+        public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger, IAssemblyProvider assemblyProvider)
         {
+            ServiceProvider = serviceProvider;
             Scope = serviceProvider.CreateScope();
             Logger = logger;
-
+            AssemblyProvider = assemblyProvider;
             Idle();
         }
 
@@ -46,36 +49,38 @@ namespace X10D.Core.Services
 
         protected override void FlushService()
         {
-            var tasks = Services.Select(service => service.Flush());
-            Task.WaitAll(tasks.ToArray());
+            var tasks = Services.Select(service => service.Flush()).ToArray();
+            Task.WaitAll(tasks);
 
             Services.ForEach(service => service.RemoveOnStateChange(OnServiceStateChange));
             Services.Clear();
+
             base.FlushService();
         }
 
         protected override void PrepareService()
         {
             Services.AddRange(Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade))));
-            var tasks = Services.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare());
-            Task.WaitAll(tasks.ToArray());
+            var tasks = Services.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare()).ToArray();
+            Task.WaitAll(tasks);
 
             base.PrepareService();
         }
 
         protected override void StartService()
         {
-            var tasks = Services.Select(service => service.Start());
-            Task.WaitAll(tasks.ToArray());
+            var tasks = Services.Select(service => service.Start()).ToArray();
+            Task.WaitAll(tasks);
+            
+            LogToken();
 
             base.StartService();
-            LogToken();
         }
 
         protected override void StopService()
         {
-            var tasks = Services.Select(service => service.Stop());
-            Task.WaitAll(tasks.ToArray());
+            var tasks = Services.Select(service => service.Stop()).ToArray();
+            Task.WaitAll(tasks);
 
             base.StopService();
         }
@@ -89,15 +94,14 @@ namespace X10D.Core.Services
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
-            (this as IServicePrototype).Stop().Wait();
-            (this as IServicePrototype).Flush().Wait();
+            base.Dispose();
+            Scope.Dispose();
         }
         
-        private void OnServiceStateChange(object sender, ServiceStateChangeEventArgs args)
+        private void OnServiceStateChange(IServicePrototype service, ServiceStateChangeEventArgs args)
         {
-            var service = sender as IServicePrototype;
             Logger.LogWarning($"{service.GetType().GetFullName()} {(args.StateChanged ? "changed" : "changing")} [{args.OldValue}] => [{args.NewValue}]");
         }
     }

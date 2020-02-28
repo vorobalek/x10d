@@ -5,7 +5,7 @@ using IServicePrototype = X10D.Infrastructure.IServicePrototype;
 
 namespace X10D.Core.Services
 {
-    internal interface IKernel : IKernelPrototype, IDisposable
+    internal interface IKernel : IKernelPrototype
     {
         /// <summary>
         /// Вывести системный токен доступа к ядру в консоль.

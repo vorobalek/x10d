@@ -6,7 +6,7 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class KernelProtection : ServicePrototype, IKernelProtection
+    internal sealed class KernelProtection : ServicePrototype<IKernelProtection>, IKernelProtection
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
 

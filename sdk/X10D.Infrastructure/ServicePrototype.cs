@@ -8,6 +8,7 @@ namespace X10D.Infrastructure
 {
     public abstract class ServicePrototype : IServicePrototype
     {
+        Type IServicePrototype.InterfaceType => null;
         Guid IServicePrototype.UID { get; } = Guid.NewGuid();
         DateTime IServicePrototype.CreationTime { get; } = DateTime.Now;
 
@@ -19,13 +20,12 @@ namespace X10D.Infrastructure
                 IfStable(() =>
                 {
                     PrepareService();
-                    if (MainProcess != null)
+                    if (Process != null)
                     {
-                        thread = new Thread(MainProcess)
+                        process = new Task(() =>
                         {
-                            IsBackground = true,
-                            Name = $"{GetType().GetFullName()}_MainThread"
-                        };
+                            Process();
+                        }, TaskCreationOptions.LongRunning);
                     }
                 });
                 IfStable(() => SetState(ServiceState.Prepared));
@@ -39,7 +39,10 @@ namespace X10D.Infrastructure
                 IfStable(() =>
                 {
                     StartService();
-                    thread?.Start();
+                    if (process != null)
+                    {
+                        process.Start();
+                    }
                 });
                 IfStable(() => SetState(ServiceState.InProgress));
             });
@@ -52,8 +55,12 @@ namespace X10D.Infrastructure
                 AnyWay(() =>
                 {
                     FlushService();
-                    Critical(() => threadId = Guid.NewGuid(), threadId);
-                    thread = null;
+                    Critical(() => processId = Guid.NewGuid(), processId);
+                    if (process != null)
+                    {
+                        process.Wait();
+                        process.Dispose();
+                    }
                 });
                 AnyWay(() => SetState(ServiceState.Flushed));
             });
@@ -66,8 +73,11 @@ namespace X10D.Infrastructure
                 IfStable(() =>
                 {
                     StopService();
-                    Critical(() => threadId = Guid.NewGuid(), threadId);
-                    thread = null;
+                    Critical(() => processId = Guid.NewGuid(), processId);
+                    if (process != null)
+                    {
+                        process.Wait();
+                    }
                 });
                 IfStable(() => SetState(ServiceState.Stopped));
             });
@@ -80,8 +90,11 @@ namespace X10D.Infrastructure
                 AnyWay(() =>
                 {
                     BlockService();
-                    Critical(() => threadId = Guid.NewGuid(), threadId);
-                    thread = null;
+                    Critical(() => processId = Guid.NewGuid(), processId);
+                    if (process != null)
+                    {
+                        process?.Wait();
+                    }
                 });
                 AnyWay(() => SetState(ServiceState.Blocked));
             });
@@ -108,14 +121,14 @@ namespace X10D.Infrastructure
         protected virtual void FlushService() { }
         protected virtual void StopService() { }
         protected virtual void BlockService() { }
-        protected virtual ThreadStart MainProcess { get; } = null;
+        protected virtual Action Process { get; } = null;
         protected ThreadStart ThreadStart(Action action) => () => action();
         protected void CriticalWhile(Func<bool> condition, Action action)
         {
             var currentThreadId = Guid.NewGuid();
-            Critical(() => threadId = currentThreadId, threadId);
+            Critical(() => processId = currentThreadId, processId);
 
-            while (condition() && Critical(() => threadId is Guid guid && guid == currentThreadId, threadId))
+            while (condition() && Critical(() => processId is Guid guid && guid == currentThreadId, processId))
             {
                 action();
             }
@@ -123,23 +136,23 @@ namespace X10D.Infrastructure
         protected void CriticalDoWhile(Func<bool> condition, Action action)
         {
             var currentThreadId = Guid.NewGuid();
-            Critical(() => threadId = currentThreadId, threadId);
+            Critical(() => processId = currentThreadId, processId);
 
             do
             {
                 action();
             }
-            while (condition() && Critical(() => threadId is Guid guid && guid == currentThreadId, threadId));
+            while (condition() && Critical(() => processId is Guid guid && guid == currentThreadId, processId));
         }
 
         protected void CriticalForEach<T>(IEnumerable<T> enumerable, Action<T> action)
         {
             var currentThreadId = Guid.NewGuid();
-            Critical(() => threadId = currentThreadId, threadId);
+            Critical(() => processId = currentThreadId, processId);
 
             foreach (var item in enumerable)
             {
-                if (Critical(() => threadId is Guid guid && guid == currentThreadId, threadId))
+                if (Critical(() => processId is Guid guid && guid == currentThreadId, processId))
                 {
                     action(item);
                 }
@@ -194,11 +207,13 @@ namespace X10D.Infrastructure
         }
 
         private event ServiceStateChangeEventHandler ServiceChangeStateEvent;
-        private object threadId;
+        private Task process;
+        private object processId;
         private readonly object baseLocker = new object();
         private bool IsStable =>
             State != ServiceState.Blocking
             && State != ServiceState.Blocked;
+
         private void SetState(ServiceState newValue)
         {
             Critical(() =>
@@ -209,6 +224,16 @@ namespace X10D.Infrastructure
                 ServiceChangeStateEvent?.Invoke(this, new ServiceStateChangeEventArgs(oldValue, newValue, true));
             }, State);
         }
-        private Thread thread;
+
+        public virtual void Dispose()
+        {
+            (this as IServicePrototype).Stop().Wait();
+            (this as IServicePrototype).Flush().Wait();
+        }
+    }
+
+    public abstract class ServicePrototype<TService> : ServicePrototype, IServicePrototype
+    {
+        Type IServicePrototype.InterfaceType => typeof(TService);
     }
 }

@@ -9,9 +9,9 @@ namespace X10D.Infrastructure
     /// </summary>
     public interface IActivator
     {
-        IList<Assembly> Assemblies { get; }
+        IReadOnlyList<Assembly> Assemblies { get; }
 
-        IList<Type> GetTypes(Func<Type, bool> predicate = null);
+        IReadOnlyList<Type> GetTypes(Func<Type, bool> predicate = null);
 
         #region Inheritor
 
@@ -40,7 +40,7 @@ namespace X10D.Infrastructure
         /// <typeparam name="T">Целевой тип</typeparam>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetInheritors<T>(bool useCaching = true);
+        IReadOnlyList<Type> GetInheritors<T>(bool useCaching = true);
 
         /// <summary>
         /// Получить всех наследников типа <typeparamref name="T"/>, удовлетворяющие предикату.
@@ -49,7 +49,7 @@ namespace X10D.Infrastructure
         /// <param name="predicate">Предикат-функция.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true);
+        IReadOnlyList<Type> GetInheritors<T>(Func<Type, bool> predicate, bool useCaching = true);
 
         #endregion
 
@@ -78,7 +78,7 @@ namespace X10D.Infrastructure
         /// <param name="targetType">Целевой тип.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetInheritors(Type targetType, bool useCaching = true);
+        IReadOnlyList<Type> GetInheritors(Type targetType, bool useCaching = true);
 
         /// <summary>
         /// Получить всех наследников типа <paramref name="targetType"/>, удовлетворяющие предикату.
@@ -87,7 +87,7 @@ namespace X10D.Infrastructure
         /// <param name="predicate">Предикат-функция.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true);
+        IReadOnlyList<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true);
 
         #endregion
 
@@ -120,7 +120,7 @@ namespace X10D.Infrastructure
         /// <typeparam name="T">Целевой тип</typeparam>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetImplementations<T>(bool useCaching = true);
+        IReadOnlyList<Type> GetImplementations<T>(bool useCaching = true);
 
         /// <summary>
         /// Получить все реализации типа <typeparamref name="T"/>, удовлетворяющие предикату.
@@ -129,7 +129,7 @@ namespace X10D.Infrastructure
         /// <param name="predicate">Предикат-функция.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true);
+        IReadOnlyList<Type> GetImplementations<T>(Func<Type, bool> predicate, bool useCaching = true);
 
         #endregion
 
@@ -158,7 +158,7 @@ namespace X10D.Infrastructure
         /// <param name="targetType">Целевой тип.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetImplementations(Type targetType, bool useCaching = true);
+        IReadOnlyList<Type> GetImplementations(Type targetType, bool useCaching = true);
 
         /// <summary>
         /// Получить все реализации типа <paramref name="targetType"/>, удовлетворяющие предикату.
@@ -167,7 +167,7 @@ namespace X10D.Infrastructure
         /// <param name="predicate">Предикат-функция.</param>
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <returns></returns>
-        IEnumerable<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true);
+        IReadOnlyList<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true);
 
         #endregion
 
@@ -203,7 +203,7 @@ namespace X10D.Infrastructure
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <param name="args">Аргументы конструктора</param>
         /// <returns></returns>
-        IEnumerable<T> GetInstances<T>(bool useCaching = true, params object[] args);
+        IReadOnlyList<T> GetInstances<T>(bool useCaching = true, params object[] args);
 
         /// <summary>
         /// Получить все экземпляры типа <typeparamref name="T"/>, удовлетворяющие предикату.
@@ -213,7 +213,7 @@ namespace X10D.Infrastructure
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <param name="args">Аргументы конструктора</param>
         /// <returns></returns>
-        IEnumerable<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args);
+        IReadOnlyList<T> GetInstances<T>(Func<Type, bool> predicate, bool useCaching = true, params object[] args);
 
         #endregion
 
@@ -245,7 +245,7 @@ namespace X10D.Infrastructure
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <param name="args">Аргументы конструктора</param>
         /// <returns></returns>
-        IEnumerable<object> GetInstances(Type targetType, bool useCaching = true, params object[] args);
+        IReadOnlyList<object> GetInstances(Type targetType, bool useCaching = true, params object[] args);
 
         /// <summary>
         /// Получить все экземпляры типа <paramref name="targetType"/>, удовлетворяющие предикату.
@@ -255,7 +255,7 @@ namespace X10D.Infrastructure
         /// <param name="useCaching">Если <c>true</c> будет использован локальный кэш.</param>
         /// <param name="args">Аргументы конструктора</param>
         /// <returns></returns>
-        IEnumerable<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args);
+        IReadOnlyList<object> GetInstances(Type targetType, Func<Type, bool> predicate, bool useCaching = true, params object[] args);
 
         #endregion
 
@@ -271,6 +271,20 @@ namespace X10D.Infrastructure
         /// <typeparam name="T">Целевой тип</typeparam>
         /// <returns></returns>
         T GetService<T>();
+
+        /// <summary>
+        /// Создать пустой экземпляр типа <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Целевой тип</typeparam>
+        /// <returns></returns>
+        T CreateEmpty<T>();
+
+        /// <summary>
+        /// Создать пустой экземпляр типа <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Целевой тип</typeparam>
+        /// <returns></returns>
+        T CreateEmpty<T>(Type type);
 
         /// <summary>
         /// Создать экземпляр типа <typeparamref name="T"/>.
@@ -307,6 +321,13 @@ namespace X10D.Infrastructure
         /// <param name="type">Целевой тип</param>
         /// <returns></returns>
         object GetService(Type type);
+
+        /// <summary>
+        /// Создать пустой экземпляр определенного типа.
+        /// </summary>
+        /// <param name="type">Целевой тип.</param>
+        /// <returns></returns>
+        object CreateEmpty(Type type);
 
         /// <summary>
         /// Создать экземпляр определенного типа.

@@ -7,7 +7,7 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal sealed class Debugger : ServicePrototype, IDebugger
+    internal sealed class Debugger : ServicePrototype<IDebugger>, IDebugger
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
 

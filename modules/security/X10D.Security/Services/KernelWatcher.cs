@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using X10D.Infrastructure;
 
@@ -17,7 +18,7 @@ namespace X10D.Security.Services
             Logger = logger;
         }
 
-        protected override ThreadStart MainProcess =>
+        protected override Action Process =>
             () =>
             {
                 CriticalWhile(() => true, () =>
