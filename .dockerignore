@@ -1,0 +1,11 @@
+.builds
+.git
+.vs
+.vscode
+.dockerignore
+.gitignore
+.gitattributes
+*/bin
+*/obj
+*.bat
+*.exe
