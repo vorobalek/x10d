@@ -18,6 +18,8 @@ namespace X10D.Core.Services
 
         public List<Assembly> Assemblies { get; private set; }
 
+        public override int LoadPriority => int.MinValue;
+
         protected override void FlushService()
         {
             Implementations = new ConcurrentDictionary<Type, List<Type>>();

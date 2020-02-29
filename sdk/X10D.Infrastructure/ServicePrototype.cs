@@ -109,6 +109,8 @@ namespace X10D.Infrastructure
             ServiceChangeStateEvent -= handler;
             return this;
         }
+
+        public virtual int LoadPriority => 0;
         public abstract ServiceLifetime ServiceLifetime { get; }
         public ServiceState State { get; private set; } = ServiceState.Unknown;
         public virtual string Log => $"{GetType().GetFullName()}\t{ServiceLifetime}\t{State}";

@@ -60,7 +60,12 @@ namespace X10D.Core.Services
 
         protected override void PrepareService()
         {
-            Services.AddRange(Scope.ServiceProvider.GetServices<IServicePrototype>().Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade))));
+            Services.AddRange(Scope
+                .ServiceProvider
+                .GetServices<IServicePrototype>()
+                .Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)))
+                .OrderBy(service => service.LoadPriority));
+
             var tasks = Services.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare()).ToArray();
             Task.WaitAll(tasks);
 
