@@ -69,14 +69,20 @@ namespace X10D.Core.Extensions
         {
             var tempServices = new ServiceCollection()
                 .Add(services)
-                .AddSingleton<IActivator, Services.Activator>();
+                .AddTransient<IActivator, Services.Activator>()
+                .AddSingleton<IActivatorCache, ActivatorCache>();
 
-            var activator = tempServices
-                .BuildServiceProvider()
+            var tempResolver = tempServices
+                .BuildServiceProvider();
+
+            var activatorCache = tempResolver
+                .GetService<IActivatorCache>();
+
+            var activator = tempResolver
                 .GetService<IActivator>();
 
-            (activator as IServicePrototype).Flush().Wait();
-            (activator as IServicePrototype).Prepare().Wait();
+            activatorCache.Flush().Wait();
+            activatorCache.Prepare().Wait();
 
             var serviceTypes = activator.GetTypes(type =>
             {

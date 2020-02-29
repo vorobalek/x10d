@@ -23,7 +23,7 @@ namespace X10D.Security.Services
             {
                 CriticalWhile(() => true, () =>
                 {
-                    Logger.LogInformation($"Kernel state: {Kernel.State}");
+                    Logger.LogInformation($"Kernel state: {Kernel.State} Ticks: {DateTime.Now.Ticks}");
                     Thread.Sleep(1000);
                 });
             };

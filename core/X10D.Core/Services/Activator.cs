@@ -11,37 +11,20 @@ namespace X10D.Core.Services
 {
     internal sealed class Activator : ServicePrototype<IActivator>, IActivator
     {
-        private static ConcurrentDictionary<Type, List<Type>> implementations = new ConcurrentDictionary<Type, List<Type>>();
-        private static ConcurrentDictionary<Type, List<Type>> inheritors = new ConcurrentDictionary<Type, List<Type>>();
-        private static List<Assembly> assemblies  = new List<Assembly>();
-
-        protected override void FlushService()
-        {
-            implementations = new ConcurrentDictionary<Type, List<Type>>();
-            inheritors = new ConcurrentDictionary<Type, List<Type>>();
-            assemblies = new List<Assembly>();
-
-            base.FlushService();
-        }
-
-        protected override void PrepareService()
-        {
-            implementations = new ConcurrentDictionary<Type, List<Type>>();
-            inheritors = new ConcurrentDictionary<Type, List<Type>>();
-            assemblies = ExtCore.Infrastructure.ExtensionManager.Assemblies?.ToList() ?? new List<Assembly>(new[] { Assembly.GetExecutingAssembly() });
-
-            base.PrepareService();
-        }
+        private ConcurrentDictionary<Type, List<Type>> Implementations => ActivatorCache.Implementations;
+        private ConcurrentDictionary<Type, List<Type>> Inheritors => ActivatorCache.Inheritors;
 
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Transient;
         private IServiceProvider ServiceProvider { get; }
-        public Activator(IServiceProvider serviceProvider)
+        private IActivatorCache ActivatorCache { get; }
+        public Activator(IServiceProvider serviceProvider, IActivatorCache activatorCache)
         {
             ServiceProvider = serviceProvider;
+            ActivatorCache = activatorCache;
             Idle();
         }
 
-        public IReadOnlyList<Assembly> Assemblies => assemblies.AsReadOnly();
+        public IReadOnlyList<Assembly> Assemblies => ActivatorCache.Assemblies.AsReadOnly();
 
         public IReadOnlyList<Type> GetTypes(Func<Type, bool> predicate = null)
         {
@@ -96,8 +79,8 @@ namespace X10D.Core.Services
 
         public IReadOnlyList<Type> GetInheritors(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
-            if (useCaching && inheritors.ContainsKey(targetType))
-                return inheritors[targetType].AsReadOnly();
+            if (useCaching && Inheritors.ContainsKey(targetType))
+                return Inheritors[targetType].AsReadOnly();
 
             List<Type> typeInheritors = new List<Type>();
 
@@ -106,7 +89,7 @@ namespace X10D.Core.Services
                     typeInheritors.Add(type);
 
             if (useCaching)
-                inheritors[targetType] = typeInheritors;
+                Inheritors[targetType] = typeInheritors;
 
             return typeInheritors;
         }
@@ -160,8 +143,8 @@ namespace X10D.Core.Services
 
         public IReadOnlyList<Type> GetImplementations(Type targetType, Func<Type, bool> predicate, bool useCaching = true)
         {
-            if (useCaching && implementations.ContainsKey(targetType))
-                return implementations[targetType].AsReadOnly();
+            if (useCaching && Implementations.ContainsKey(targetType))
+                return Implementations[targetType].AsReadOnly();
 
             List<Type> typeImplementations = new List<Type>();
 
@@ -170,7 +153,7 @@ namespace X10D.Core.Services
                     typeImplementations.Add(type);
 
             if (useCaching)
-                implementations[targetType] = typeImplementations;
+                Implementations[targetType] = typeImplementations;
 
             return typeImplementations;
         }
