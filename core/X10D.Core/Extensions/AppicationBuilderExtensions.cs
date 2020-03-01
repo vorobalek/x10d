@@ -34,7 +34,7 @@ namespace X10D.Core.Extensions
             return application
                 .UseStatusCodePagesWithReExecute("/error/{0}")
                 .UseExceptionHandler("/fail")
-                .UseStaticFiles()
+                .UseFileServer()
                 .UseRouting()
                 .UseAuthentication()
                 .UseAuthorization()
