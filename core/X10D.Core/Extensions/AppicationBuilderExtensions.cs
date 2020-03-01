@@ -32,11 +32,12 @@ namespace X10D.Core.Extensions
         private static IApplicationBuilder UseKernelMvc(this IApplicationBuilder application)
         {
             return application
+                .UseStatusCodePagesWithReExecute("/error/{0}")
+                .UseExceptionHandler("/fail")
+                .UseStaticFiles()
                 .UseRouting()
                 .UseAuthentication()
                 .UseAuthorization()
-                .UseStatusCodePagesWithReExecute("/error/{0}")
-                .UseExceptionHandler("/fail")
                 .UseEndpoints(endpoints =>
                 {
                     endpoints.MapAreaControllerRoute(
@@ -51,7 +52,7 @@ namespace X10D.Core.Extensions
         private static IApplicationBuilder TryUseExtCore(this IApplicationBuilder application)
         {
             var kernel = application.ApplicationServices.GetService<IKernelFacade>();
-            if (kernel?.State == ServiceState.InProgress)
+            if (kernel.IsStable)
             {
                 application.UseExtCore();
             }

@@ -110,7 +110,7 @@ namespace X10D.Infrastructure
             return this;
         }
 
-        public virtual int LoadPriority => 0;
+        public virtual int? LoadPriority => 0;
         public abstract ServiceLifetime ServiceLifetime { get; }
         public ServiceState State { get; private set; } = ServiceState.Unknown;
         public virtual string Log => $"{GetType().GetFullName()}\t{ServiceLifetime}\t{State}";
@@ -208,6 +208,14 @@ namespace X10D.Infrastructure
             }
         }
 
+        protected Task Prepare() => (this as IServicePrototype).Prepare();
+        protected Task Start() => (this as IServicePrototype).Stop();
+        protected Task Stop() => (this as IServicePrototype).Stop();
+        protected Task Flush() => (this as IServicePrototype).Flush();
+        protected Task Block() => (this as IServicePrototype).Block();
+        protected IServicePrototype AddOnStateChange(ServiceStateChangeEventHandler handler) => (this as IServicePrototype).AddOnStateChange(handler);
+        protected IServicePrototype RemoveOnStateChange(ServiceStateChangeEventHandler handler) => (this as IServicePrototype).RemoveOnStateChange(handler);
+
         private event ServiceStateChangeEventHandler ServiceChangeStateEvent;
         private Task process;
         private object processId;
@@ -229,8 +237,8 @@ namespace X10D.Infrastructure
 
         public virtual void Dispose()
         {
-            (this as IServicePrototype).Stop().Wait();
-            (this as IServicePrototype).Flush().Wait();
+            Stop().Wait();
+            Flush().Wait();
         }
     }
 

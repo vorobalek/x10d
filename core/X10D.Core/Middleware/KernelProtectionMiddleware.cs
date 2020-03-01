@@ -20,7 +20,7 @@ namespace X10D.Core.Middleware
             if (!kernelProtection.IsReady)
             {
                 var path = context.Request.Path;
-                if (kernelProtection.SafeUrlPrefixes.All(prefix => !path.StartsWithSegments(prefix, StringComparison.InvariantCultureIgnoreCase)))
+                if (kernelProtection.SafeUrlPrefixes.All(prefix => !path.ToString().ToLowerInvariant().StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     context.Request.Path = kernelProtection.SafeRedirectUrl;
                 }

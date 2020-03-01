@@ -8,7 +8,7 @@ namespace X10D.Infrastructure
 
     public interface IServicePrototype : IDisposable
     {
-        int LoadPriority { get; }
+        int? LoadPriority { get; }
         Type InterfaceType { get; }
         Guid UID { get; }
         DateTime CreationTime { get; }

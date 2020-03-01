@@ -1,16 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using X10D.Core.Services;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Areas.Kernel.Controllers.Api
 {
     [ApiController]
-    [Route("/kernel/api/[controller]")]
+    [Route("/api/kernel.[controller]")]
     public class LogController : ControllerBase
     {
-        Services.IKernel Kernel { get; }
+        IKernel Kernel { get; }
         public LogController(IActivator activator)
         {
-            Kernel = activator.GetService<Services.IKernel>();
+            Kernel = activator.GetService<IKernel>();
         }
 
         public string Get()

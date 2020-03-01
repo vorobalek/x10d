@@ -18,14 +18,14 @@ namespace X10D.Security.Services
             Logger = logger;
         }
 
-        protected override Action Process =>
-            () =>
-            {
-                CriticalWhile(() => true, () =>
-                {
-                    Logger.LogInformation($"Kernel state: {Kernel.State} Ticks: {DateTime.Now.Ticks}");
-                    Thread.Sleep(1000);
-                });
-            };
+        //protected override Action Process =>
+        //    () =>
+        //    {
+        //        CriticalWhile(() => true, () =>
+        //        {
+        //            Logger.LogInformation($"Kernel state: {Kernel.State} Ticks: {DateTime.Now.Ticks}");
+        //            Thread.Sleep(1000);
+        //        });
+        //    };
     }
 }

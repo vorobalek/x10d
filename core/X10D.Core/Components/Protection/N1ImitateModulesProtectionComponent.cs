@@ -5,18 +5,12 @@ namespace X10D.Core.Components.Protection
 {
     internal sealed class N1ImitateModulesProtectionComponent
     {
-        IStoredCache StoredCache { get; }
-
-        public N1ImitateModulesProtectionComponent(IStoredCache storedCache)
-        {
-            StoredCache = storedCache;
-        }
-
         public int Priority => -1;
-        public bool Invoke()
+        //public bool IsRelevant => false;
+        public bool Invoke(IStoredCache storedCache)
         {
-            StoredCache["modules.path"] = "modules";
-            StoredCache["modules.recursive"] = true.ToString(new CultureInfo("en-US"));
+            storedCache["modules.path"] = "modules";
+            storedCache["modules.recursive"] = true.ToString(new CultureInfo("en-US"));
 
             return true;
         }

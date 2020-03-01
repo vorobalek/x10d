@@ -2,5 +2,6 @@
 {
     public interface IKernelFacade : IServicePrototype
     {
+        bool IsStable { get; }
     }
 }

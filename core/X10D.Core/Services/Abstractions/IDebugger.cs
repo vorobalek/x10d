@@ -5,7 +5,7 @@ using X10D.Infrastructure;
 
 namespace X10D.Core.Services
 {
-    internal interface IDebugger : IDebuggerFacade
+    internal interface IDebugger : IServicePrototype, IDebuggerFacade
     {
         IReadOnlyDictionary<string, Type> Components { get; }
         IReadOnlyList<IDebuggerCompomnentInfo> ComponentsInfo { get; }

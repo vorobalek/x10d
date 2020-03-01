@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>X10D.Core</AssemblyName>
-    <StartupObject>X10D.Core.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -39,10 +38,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\sdk\X10D.WebApplication\X10D.WebApplication.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Areas\Kernel\Models\" />
   </ItemGroup>
   
 </Project>

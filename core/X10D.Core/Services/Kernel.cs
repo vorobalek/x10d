@@ -55,19 +55,30 @@ namespace X10D.Core.Services
             Services.ForEach(service => service.RemoveOnStateChange(OnServiceStateChange));
             Services.Clear();
 
+            RemoveOnStateChange(OnServiceStateChange);
             base.FlushService();
         }
 
         protected override void PrepareService()
         {
-            Services.AddRange(Scope
+            AddOnStateChange(OnServiceStateChange);
+
+            var services = Scope
                 .ServiceProvider
                 .GetServices<IServicePrototype>()
-                .Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)))
-                .OrderBy(service => service.LoadPriority));
+                .Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)));
 
-            var tasks = Services.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare()).ToArray();
+            var priorityServices = services.Where(service => service.LoadPriority.HasValue).OrderBy(services => services.LoadPriority.Value);
+            foreach (var service in priorityServices)
+            {
+                service.Prepare().Wait();
+            }
+            Services.AddRange(priorityServices);
+
+            var anotherServices = services.Where(services => !services.LoadPriority.HasValue);
+            var tasks = anotherServices.Select(service => service.AddOnStateChange(OnServiceStateChange).Prepare()).ToArray();
             Task.WaitAll(tasks);
+            Services.AddRange(anotherServices);
 
             base.PrepareService();
         }
@@ -99,6 +110,8 @@ namespace X10D.Core.Services
             }
         }
 
+        public bool IsStable => IfStable(() => true);
+
         public override void Dispose()
         {
             base.Dispose();
@@ -107,7 +120,7 @@ namespace X10D.Core.Services
         
         private void OnServiceStateChange(IServicePrototype service, ServiceStateChangeEventArgs args)
         {
-            Logger.LogWarning($"{service.GetType().GetFullName()} {(args.StateChanged ? "changed" : "changing")} [{args.OldValue}] => [{args.NewValue}]");
+            Logger.LogWarning($"{service.GetType().GetFullName()} state {(args.StateChanged ? "changed" : "changing")} [{args.OldValue}] => [{args.NewValue}]");
         }
     }
 }

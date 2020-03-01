@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace X10D.Core.Services
             } 
         }
 
-        public IList<string> SafeUrlPrefixes { get; private set; } = new List<string>(new[] { "/kernel/api/log" });
+        public IList<string> SafeUrlPrefixes { get; private set; } = defaultSafeUrlPrefixes;
 
         public bool IsReady => State == ServiceState.InProgress;
 
@@ -34,10 +35,13 @@ namespace X10D.Core.Services
         
         private IKernel Kernel { get; }
 
-        public KernelProtection(IActivator activator, IKernel kernel)
+        private ILogger Logger { get; }
+
+        public KernelProtection(IActivator activator, IKernel kernel, ILogger<IKernelProtection> logger)
         {
             Activator = activator;
             Kernel = kernel;
+            Logger = logger;
             Idle();
         }
 
@@ -45,7 +49,7 @@ namespace X10D.Core.Services
 
         protected override void FlushService()
         {
-            components = new SortedList<int, TypedObject>();
+            components = new SortedList<int, Type>();
             SafeUrlPrefixes = new List<string>();
             SafeRedirectUrl = null;
 
@@ -54,8 +58,8 @@ namespace X10D.Core.Services
 
         protected override void PrepareService()
         {
-            components = new SortedList<int, TypedObject>();
-            SafeUrlPrefixes = new List<string>();
+            components = new SortedList<int, Type>();
+            SafeUrlPrefixes = defaultSafeUrlPrefixes;
             SafeRedirectUrl = "/kernel/api/log";
 
             var types = Activator.GetTypes(type =>
@@ -66,11 +70,11 @@ namespace X10D.Core.Services
                 && type.GetMethod(nameof(ProtectionComponent.Invoke)) != null
                 && type.GetMethod(nameof(ProtectionComponent.Invoke)).ReturnType == typeof(bool));
 
-            foreach (var type in types)
+            foreach (var componentType in types)
             {
-                var componentObj = new TypedObject(type, Activator.CreateInstance(type));
-                var componentKey = type.GetProperty(nameof(ProtectionComponent.Priority)).GetValue(componentObj.Object) as int? ?? int.MinValue;
-                components.Add(componentKey, componentObj);
+                var componentObj = Activator.CreateEmpty(componentType);
+                var componentKey = componentType.GetProperty(nameof(ProtectionComponent.Priority)).GetValue(componentObj) as int? ?? int.MinValue;
+                components.Add(componentKey, componentType);
             }
 
             base.PrepareService();
@@ -78,14 +82,36 @@ namespace X10D.Core.Services
 
         protected override void StartService()
         {
-            foreach (var component in components)
+            foreach (var componentType in components.Values)
             {
-                var result = component.Value.Type.GetMethod(nameof(ProtectionComponent.Invoke)).Invoke(component.Value.Object, null);
-                if (result is bool flag && !flag)
+                var componentObj = Activator.GetServiceOrCreateInstance(componentType);
+                if ((componentType.GetProperty(nameof(ProtectionComponent.IsRelevant))?.GetValue(componentObj) ?? true as object) is bool isRelevant && 
+                    isRelevant)
                 {
-                    (this as IServicePrototype).Block().Wait();
-                    Kernel.Block().Wait();
-                    break;
+                    using var scope = Activator.GetService<IServiceProvider>().CreateScope();
+                    var activator = scope.ServiceProvider.GetService<IActivator>();
+                    var method = componentType.GetMethod(nameof(ProtectionComponent.Invoke));
+
+                    if (method != null)
+                    {
+                        var args = method.GetParameters()
+                            .Select(p => p.ParameterType)
+                            .Select(type => activator.GetServiceOrCreateInstance(type));
+                        
+                        var invokeResultObj = method.Invoke(componentObj, args.ToArray());
+
+                        if (invokeResultObj is bool invokeResult &&
+                            !invokeResult)
+                        {
+                            Logger.LogCritical($"Kernel protection point {componentType.GetFullName()}:\tBLOCK");
+                            
+                            Block().Wait();
+                            Kernel.Block().Wait();
+                            
+                            break;
+                        }
+                        Logger.LogInformation($"Kernel protection point {componentType.GetFullName()}:\tOK");
+                    }
                 }
             }
 
@@ -94,10 +120,15 @@ namespace X10D.Core.Services
 
         private sealed class ProtectionComponent
         {
+            internal bool IsRelevant => false;
             internal int Priority => int.MinValue;
             internal bool Invoke() { return true; }
         }
         private string safeRedirectUrl;
-        private SortedList<int, TypedObject> components = new SortedList<int, TypedObject>();
+        private SortedList<int, Type> components = new SortedList<int, Type>();
+        private static IList<string> defaultSafeUrlPrefixes = new List<string>(new[]
+        {
+            "/api/kernel",
+        });
     }
 }
