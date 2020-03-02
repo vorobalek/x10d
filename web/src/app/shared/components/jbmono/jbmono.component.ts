@@ -8,11 +8,11 @@ import { Component, OnInit, Input } from '@angular/core';
 export class JbmonoComponent implements OnInit {
   @Input() type: string;
   @Input() size: string;
-  class: string = 'jbmono-r';
+  class: string = 'app-jbmono-r';
   constructor() { }
   ngOnInit() {
     if (this.type != null) {
-      let classPrefix = 'jbmono-';
+      let classPrefix = 'app-jbmono-';
       let classPostfix = 'r';
       switch (this.type.toLowerCase()) {
         case 'bold-italic':

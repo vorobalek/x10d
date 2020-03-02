@@ -1,56 +1,18 @@
-.logo-x16-file-png {
-    width: 16px;
-    height: 16px;
-
-    background: url(/assets/images/png/logo-16x16.png) center center no-repeat;
-    background-size: 16px;
+$names: (
+    "logo", 
+    "error-cat"
+);
+$count: 500;
+@mixin png-list {
+    @each $name in $names {
+        @for $i from 1 through $count {
+            .#{$name}-png-x#{$i} {
+                width: #{$i}px;
+                height: #{$i}px;
+                background: url(/assets/images/png/#{$name}.png) center center no-repeat;
+                background-size: #{$i}px;
+            }
+        }
+    }
 }
-.logo-x32-file-png {
-    width: 32px;
-    height: 32px;
-
-    background: url(/assets/images/png/logo-32x32.png) center center no-repeat;
-    background-size: 32px;
-}
-.logo-x48-file-png {
-    width: 48px;
-    height: 48px;
-
-    background: url(/assets/images/png/logo-48x48.png) center center no-repeat;
-    background-size: 48px;
-}
-.logo-x64-file-png {
-    width: 64px;
-    height: 64px;
-
-    background: url(/assets/images/png/logo-64x64.png) center center no-repeat;
-    background-size: 64px;
-}
-.logo-x95-file-png {
-    width: 95px;
-    height: 95px;
-
-    background: url(/assets/images/png/logo-95x95.png) center center no-repeat;
-    background-size: 95px;
-}
-.logo-x128-file-png {
-    width: 128px;
-    height: 128px;
-
-    background: url(/assets/images/png/logo-128x128.png) center center no-repeat;
-    background-size: 128px;
-}
-.logo-x256-file-png {
-    width: 256px;
-    height: 256px;
-
-    background: url(/assets/images/png/logo-256x256.png) center center no-repeat;
-    background-size: 256px;
-}
-.logo-x274-file-png {
-    width: 274px;
-    height: 274px;
-
-    background: url(/assets/images/png/logo-274x274.png) center center no-repeat;
-    background-size: 274px;
-}
+@include png-list;
