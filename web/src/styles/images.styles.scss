@@ -2,11 +2,11 @@ $names: (
     "logo", 
     "error-cat"
 );
-$count: 500;
-@mixin png-list {
+$count_px: 500;
+@mixin png-list-px {
     @each $name in $names {
-        @for $i from 1 through $count {
-            .#{$name}-png-x#{$i} {
+        @for $i from 1 through $count_px {
+            .#{$name}-png-x#{$i}px {
                 width: #{$i}px;
                 height: #{$i}px;
                 background: url(/assets/images/png/#{$name}.png) center center no-repeat;
@@ -15,4 +15,19 @@ $count: 500;
         }
     }
 }
-@include png-list;
+@include png-list-px;
+
+$count_vw: 500;
+@mixin png-list-vw {
+    @each $name in $names {
+        @for $i from 1 through $count_vw {
+            .#{$name}-png-x#{$i}vw {
+                width: #{$i}vw;
+                height: #{$i}vw;
+                background: url(/assets/images/png/#{$name}.png) center center no-repeat;
+                background-size: #{$i}vw;
+            }
+        }
+    }
+}
+@include png-list-vw;
