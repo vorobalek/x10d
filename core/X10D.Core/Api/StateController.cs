@@ -2,7 +2,7 @@
 using X10D.Core.Services;
 using X10D.Infrastructure;
 
-namespace X10D.Core.Areas.Kernel.Controllers.Api
+namespace X10D.Core.Api
 {
     [ApiController]
     [Route("/api/kernel.[controller]")]
