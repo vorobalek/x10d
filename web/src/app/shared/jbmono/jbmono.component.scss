@@ -1,66 +1,23 @@
+$format: "woff2"; // eot, woff, woff2
+$fonts-path: "/assets/fonts/#{$format}/";
 $prefix: "app-jbmono-";
-$fonts-path: "/assets/fonts/woff2/";
+$data: (
+    ("bi",  "Bold-Italic"),
+    ("b",   "Bold"),
+    ("xbi", "ExtraBold-Italic"),
+    ("xb",  "ExtraBold"),
+    ("i",   "Italic"),
+    ("mi",  "Medium-Italic"),
+    ("m",   "Medium"),
+    ("r",   "Regular"),
+);
 
-@font-face {
-    font-family: #{$prefix}bi;
-    src: url("#{$fonts-path}JetBrainsMono-Bold-Italic.woff2") format("woff2");
-}
-.#{$prefix}bi {
-    font-family: #{$prefix}bi, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}b;
-    src: url("#{$fonts-path}JetBrainsMono-Bold.woff2") format("woff2");
-}
-.#{$prefix}b {
-    font-family: #{$prefix}b, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}xbi;
-    src: url("#{$fonts-path}JetBrainsMono-ExtraBold-Italic.woff2") format("woff2");
-}
-.#{$prefix}xbi {
-    font-family: #{$prefix}xbi, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}xb;
-    src: url("#{$fonts-path}JetBrainsMono-ExtraBold.woff2") format("woff2");
-}
-.#{$prefix}xb {
-    font-family: #{$prefix}xb, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}i;
-    src: url("#{$fonts-path}JetBrainsMono-Italic.woff2") format("woff2");
-}
-.#{$prefix}i {
-    font-family: #{$prefix}i, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}mi;
-    src: url("#{$fonts-path}JetBrainsMono-Medium-Italic.woff2") format("woff2");
-}
-.#{$prefix}mi {
-    font-family: #{$prefix}mi, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}m;
-    src: url("#{$fonts-path}JetBrainsMono-Medium.woff2") format("woff2");
-}
-.#{$prefix}m {
-    font-family: #{$prefix}m, monospace;
-}
-
-@font-face {
-    font-family: #{$prefix}r;
-    src: url("#{$fonts-path}JetBrainsMono-Regular.woff2") format("woff2");
-}
-.#{$prefix}r {
-    font-family: #{$prefix}r, monospace;
+@each $key, $name in $data {
+    @font-face {
+        font-family: #{$prefix}#{$key};
+        src: url("#{$fonts-path}JetBrainsMono-#{$name}.#{$format}") format("#{$format}");
+    }
+    .#{$prefix}#{$key} {
+        font-family: #{$prefix}#{$key}, monospace;
+    }
 }

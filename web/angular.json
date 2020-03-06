@@ -28,7 +28,7 @@
             ],
             "styles": [
               "src/styles/main.styles.scss",
-              "src/styles/images.styles.scss"
+              "src/styles/pic.styles.scss"
             ],
             "scripts": []
           },

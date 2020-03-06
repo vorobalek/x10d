@@ -16,6 +16,10 @@ import { NotFoundComponent } from './not-found/not-found.component';
   imports: [
     CommonModule,
     SharedRoutingModule
+  ],
+  exports: [
+    ContainerComponent,
+    JBMonoComponent
   ]
 })
 export class SharedModule { }

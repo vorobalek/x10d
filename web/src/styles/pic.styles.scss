@@ -1,33 +1,33 @@
 $names: (
     "logo", 
-    "error-cat"
+    "crying-cat"
 );
 $count_px: 500;
-@mixin png-list-px {
+@mixin pic-list-px {
     @each $name in $names {
         @for $i from 1 through $count_px {
-            .#{$name}-png-x#{$i}px {
+            .pic-#{$name}-#{$i}px {
                 width: #{$i}px;
                 height: #{$i}px;
-                background: url(/assets/images/png/#{$name}.png) center center no-repeat;
+                background: url(/assets/pics/#{$name}.png) center center no-repeat;
                 background-size: #{$i}px;
             }
         }
     }
 }
-@include png-list-px;
+@include pic-list-px;
 
 $count_vw: 500;
-@mixin png-list-vw {
+@mixin pic-list-vw {
     @each $name in $names {
         @for $i from 1 through $count_vw {
-            .#{$name}-png-x#{$i}vw {
+            .pic-#{$name}-#{$i}vw {
                 width: #{$i}vw;
                 height: #{$i}vw;
-                background: url(/assets/images/png/#{$name}.png) center center no-repeat;
+                background: url(/assets/pics/#{$name}.png) center center no-repeat;
                 background-size: #{$i}vw;
             }
         }
     }
 }
-@include png-list-vw;
+@include pic-list-vw;
