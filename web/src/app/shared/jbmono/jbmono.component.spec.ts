@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { JbmonoComponent } from './jbmono.component';
+import { JBMonoComponent } from './jbmono.component';
 
-describe('JbmonoComponent', () => {
-  let component: JbmonoComponent;
-  let fixture: ComponentFixture<JbmonoComponent>;
+describe('JBMonoComponent', () => {
+  let component: JBMonoComponent;
+  let fixture: ComponentFixture<JBMonoComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ JbmonoComponent ]
+      declarations: [ JBMonoComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(JbmonoComponent);
+    fixture = TestBed.createComponent(JBMonoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

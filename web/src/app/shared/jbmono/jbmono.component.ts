@@ -5,7 +5,7 @@ import { Component, OnInit, Input } from '@angular/core';
   templateUrl: './jbmono.component.html',
   styleUrls: ['./jbmono.component.scss']
 })
-export class JbmonoComponent implements OnInit {
+export class JBMonoComponent implements OnInit {
   @Input() type: string;
   @Input() size: string;
   class: string = 'app-jbmono-r';
