@@ -19,7 +19,7 @@ FROM node AS web_build
 WORKDIR /source
 COPY . .
 WORKDIR /source/web
-RUN rm -rf node_modules && npm cache clean --force && npm install @angular/cli && npm install && npm run build -- --configuration=production
+RUN rm -rf node_modules && npm cache clean --force && npm install @angular/cli && npm install && npm run build-prod
 
 FROM runtime AS image
 WORKDIR /x10d
