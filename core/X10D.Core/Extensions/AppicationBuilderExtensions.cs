@@ -12,6 +12,7 @@ namespace X10D.Core.Extensions
         {
             return application
                 .UseRequestTimestamp()
+                .UseTokenSidePolicy()
                 .UseKernelProtection()
                 .UseKernelMvc()
                 .TryUseExtCore();
@@ -27,6 +28,12 @@ namespace X10D.Core.Extensions
         {
             return application
                 .UseMiddleware<RequestTimestampMiddleware>();
+        }
+
+        private static IApplicationBuilder UseTokenSidePolicy(this IApplicationBuilder application)
+        {
+            return application
+                .UseMiddleware<TokenSidePolicyMiddleware>();
         }
 
         private static IApplicationBuilder UseKernelMvc(this IApplicationBuilder application)

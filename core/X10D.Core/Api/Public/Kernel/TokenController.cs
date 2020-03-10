@@ -2,7 +2,7 @@
 using X10D.Core.Services;
 using X10D.Infrastructure;
 
-namespace X10D.Core.Api.Kernel
+namespace X10D.Core.Api.Public.Kernel
 {
     public class TokenController : KernelApiControllerBase
     {
@@ -10,10 +10,17 @@ namespace X10D.Core.Api.Kernel
         {
         }
 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            Activator.GetService<IKernel>().LogToken();
+            return Ok("done", "The token was printed in console.");
+        }
+
         [HttpPost]
         public IActionResult Post([FromQuery] string token)
         {
-            if (Activator.GetService<IKernel>().ValidateToken(token))
+            if (Activator.GetService<IKernelFacade>().ValidateToken(token))
             {
                 return Ok("ok", "Token is valid");
             }

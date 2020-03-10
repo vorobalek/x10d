@@ -41,6 +41,12 @@ namespace X10D.Core.Services
 ------------------------------------------");
         }
 
+        public void ChangeToken()
+        {
+            token = Guid.NewGuid();
+            LogToken();
+        }
+
         private Guid token = Guid.NewGuid();
         public bool ValidateToken(string candidate)
         {

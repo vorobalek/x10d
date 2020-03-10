@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
@@ -57,6 +58,9 @@ namespace X10D.Core.Components.Debugger
                 return true;
 
             if (actionMethodInfo.GetCustomAttribute<AuthorizeAttribute>(true) != null)
+                return true;
+
+            if (controllerTypeInfo.GetCustomAttribute<SecureApiRouteAttribute>(true) != null)
                 return true;
 
             return false;

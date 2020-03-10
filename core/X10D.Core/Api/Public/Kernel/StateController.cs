@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using X10D.Infrastructure;
 
-namespace X10D.Core.Api.Kernel
+namespace X10D.Core.Api.Public.Kernel
 {
     public class StateController : KernelApiControllerBase
     {
