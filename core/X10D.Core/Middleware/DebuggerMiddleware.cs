@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using X10D.Core.Services;
+using X10D.Infrastructure;
 
 namespace X10D.Core.Middleware
 {
@@ -18,7 +19,7 @@ namespace X10D.Core.Middleware
         {
             await _next(context).ConfigureAwait(true);
 
-            if (context.Request.Query.TryGetValue("debug", out var debugObj) && debugObj.Count > 0 && debugObj[0] is string debug)
+            if (context.Request.Query.TryGetValue(Constants.Debug, out var debugObj) && debugObj.Count > 0 && debugObj[0] is string debug)
             {
                 var timeStart = DateTime.Now;
                 var session = await debugger.ProcessDebugAsync(nameof(DebuggerMiddleware), debug.Split(',')).ConfigureAwait(true);

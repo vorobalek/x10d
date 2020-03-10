@@ -99,7 +99,14 @@ namespace X10D.Core.Extensions
                 var serviceEmpty = activator.CreateEmpty<IServicePrototype>(serviceType);
                 if (serviceEmpty.InterfaceType != null)
                 {
-                    services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceType, serviceEmpty.ServiceLifetime));
+                    if (serviceEmpty.CustomFactory != null)
+                    {
+                        services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceEmpty.CustomFactory, serviceEmpty.ServiceLifetime));
+                    }
+                    else
+                    {
+                        services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceType, serviceEmpty.ServiceLifetime));
+                    }
                 }
 
                 // adding all services as prototypes

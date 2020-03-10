@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
+using X10D.Infrastructure;
 
 namespace X10D.Core.Middleware
 {
@@ -16,15 +17,15 @@ namespace X10D.Core.Middleware
         public async Task Invoke(HttpContext context)
         {
             var requestStartedOn = DateTime.Now;
-            context.Items.Add("__request_started_on__", requestStartedOn);
+            context.Items.Add(Constants.RequestStartedOn, requestStartedOn);
             
             await _next(context).ConfigureAwait(true);
             
             var requestFinishedOn = DateTime.Now;
-            context.Items.Add("__request_finished_on__", requestFinishedOn);
+            context.Items.Add(Constants.RequestFinishedOn, requestFinishedOn);
 
             var request_time = requestFinishedOn - requestStartedOn;
-            context.Items.Add("__request_time__", request_time);
+            context.Items.Add(Constants.RequestTime, request_time);
         }
     }
 }

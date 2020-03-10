@@ -13,6 +13,7 @@ namespace X10D.Infrastructure
         Guid UID { get; }
         DateTime CreationTime { get; }
         ServiceLifetime ServiceLifetime { get; }
+        Func<IServiceProvider, object> CustomFactory { get; }
         ServiceState State { get; }
         Task Prepare();
         Task Start();

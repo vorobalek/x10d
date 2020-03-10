@@ -112,6 +112,7 @@ namespace X10D.Infrastructure
 
         public virtual int? LoadPriority => 0;
         public abstract ServiceLifetime ServiceLifetime { get; }
+        public virtual Func<IServiceProvider, object> CustomFactory { get; } = null;
         public ServiceState State { get; private set; } = ServiceState.Unknown;
         public virtual string Log => $"{GetType().GetFullName()}\t{ServiceLifetime}\t{State}";
         protected void Idle()

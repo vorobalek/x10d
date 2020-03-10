@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\sdk\Mvc\X10D.Mvc\X10D.Mvc.csproj" />
     <ProjectReference Include="..\..\sdk\X10D.WebApplication\X10D.WebApplication.csproj" />
   </ItemGroup>
   
