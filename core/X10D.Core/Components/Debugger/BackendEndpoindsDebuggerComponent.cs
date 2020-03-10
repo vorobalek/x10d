@@ -34,7 +34,7 @@ namespace X10D.Core.Components.Debugger
                 foreach (var descriptor in actionDescriptors.GroupBy(a => a.ActionName).Select(g => g.First()))
                 {
                     var methodInfo = descriptor.MethodInfo;
-                    var httpMethod = "GET";
+                    var httpMethod = "ANY";
                     if (descriptor.EndpointMetadata.FirstOrDefault(obj => obj.GetType() == typeof(HttpMethodMetadata)) is HttpMethodMetadata httpMethodMetadata)
                     {
                         httpMethod = string.Join(", ", httpMethodMetadata.HttpMethods);
