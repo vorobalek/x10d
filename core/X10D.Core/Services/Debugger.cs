@@ -9,107 +9,54 @@ namespace X10D.Core.Services
 {
     internal sealed class Debugger : ServicePrototype<IDebugger>, IDebugger
     {
-        public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
-
+        public override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
+        public override int? LoadPriority => 1;
         private IActivator Activator { get; }
 
-        public Debugger(IActivator activator)
+        private IDebuggerCache DebuggerCache { get; }
+
+        public Debugger(IActivator activator, IDebuggerCache debuggerCache)
         {
             Activator = activator;
+            DebuggerCache = debuggerCache;
             Idle();
         }
 
-        private IDictionary<string, Type> components;
-        public IReadOnlyDictionary<string, Type> Components
-        {
-            get
-            {
-                return components.ToDictionary(kv => kv.Key, kv => kv.Value) as IReadOnlyDictionary<string, Type>;
-            }
-        }
+        public IReadOnlyDictionary<string, Type> Components => DebuggerCache.Components;
 
-        private IList<IDebuggerCompomnentInfo> componentsInfo;
-        public IReadOnlyList<IDebuggerCompomnentInfo> ComponentsInfo
-        {
-            get
-            {
-                return componentsInfo.ToList().AsReadOnly();
-            }
-        }
+        public IReadOnlyList<IDebuggerCompomnentInfo> ComponentsInfo => DebuggerCache.ComponentsInfo;
 
-        private IList<IDebuggerSession> sessions;
-        public IReadOnlyList<IDebuggerSession> Sessions
-        {
-            get
-            {
-                return sessions.ToList().AsReadOnly();
-            }
-        }
+        public IReadOnlyList<IDebuggerSession> Sessions => DebuggerCache.Sessions;
         public Task<IDebuggerSession> ProcessDebugAsync(string[] keys) => ProcessDebugAsync(null, keys);
         public Task<IDebuggerSession> ProcessDebugAsync(string session_name, string[] keys)
         {
             return Task.Run(() =>
             {
-                using var scope = Activator.GetService<IServiceProvider>().CreateScope();
-                var activator = scope.ServiceProvider.GetService<IActivator>();
                 foreach (var key in keys)
                 {
-                    if (components.TryGetValue(key, out var componentType))
+                    if (Components.TryGetValue(key, out var componentType))
                     {
-                        var component = activator.GetServiceOrCreateInstance(componentType);
+                        var component = Activator.GetServiceOrCreateInstance(componentType);
                         var method = componentType.GetMethod(nameof(DebuggerComponent.Invoke));
 
                         if (method != null)
                         {
                             var args = method.GetParameters()
                                 .Select(p => p.ParameterType)
-                                .Select(type => activator.GetServiceOrCreateInstance(type));
+                                .Select(type => Activator.GetServiceOrCreateInstance(type));
 
                             method.Invoke(component, args.ToArray());
                         }
                     }
                 }
-                var session = activator.GetServiceOrCreateInstance<IDebuggerSession>();
+                var session = Activator.GetServiceOrCreateInstance<IDebuggerSession>();
                 if (!session.IsTemporary)
                 {
                     session.SetName(session_name);
-                    sessions.Add(session);
+                    DebuggerCache.AddSession(session);
                 }
                 return session;
             });
-        }
-
-        protected override void FlushService()
-        {
-            components = new Dictionary<string, Type>();
-            componentsInfo = new List<IDebuggerCompomnentInfo>();
-            sessions = new List<IDebuggerSession>();
-            base.FlushService();
-        }
-
-        protected override void PrepareService()
-        {
-            components = new Dictionary<string, Type>();
-            componentsInfo = new List<IDebuggerCompomnentInfo>();
-            sessions = new List<IDebuggerSession>();
-            var types = Activator.GetTypes(type =>
-                type.Name.Length > nameof(DebuggerComponent).Length
-                && type.Name.IndexOf(nameof(DebuggerComponent), StringComparison.InvariantCultureIgnoreCase) == type.Name.Length - nameof(DebuggerComponent).Length
-                && type.GetProperty(nameof(DebuggerComponent.Key)) != null
-                && type.GetProperty(nameof(DebuggerComponent.Key)).PropertyType == typeof(string)
-                && type.GetMethod(nameof(DebuggerComponent.Invoke)) != null
-                && type.GetMethod(nameof(DebuggerComponent.Invoke)).GetParameters().Length > 0);
-
-            foreach (var type in types)
-            {
-                var componentObj = Activator.GetServiceOrCreateInstance(type);
-                var componentKey = type.GetProperty(nameof(DebuggerComponent.Key))?.GetValue(componentObj) as string;
-                var componentDescription = type.GetProperty(nameof(DebuggerComponent.Description))?.GetValue(componentObj) as string ?? "without description";
-
-                components.Add(componentKey, type);
-                componentsInfo.Add(IDebuggerCompomnentInfo.Create(componentKey, componentDescription));
-            }
-            base.PrepareService();
         }
     }
 }

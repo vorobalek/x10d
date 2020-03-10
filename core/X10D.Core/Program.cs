@@ -17,6 +17,13 @@ namespace X10D.Core
                     webBuilder
                     .UseKestrel()
                     .UseStartup<Startup>();
+                })
+                .UseDefaultServiceProvider((ctx, opts) =>
+                {
+                    opts.ValidateScopes = false;
+                    opts.GetType()
+                        .GetProperty("Mode", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                        .SetValue(opts, 1);
                 });
     }
 }

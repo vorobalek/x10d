@@ -15,12 +15,10 @@ namespace X10D.Core.Services
         private IServiceProvider ServiceProvider { get; }
         private ILogger Logger { get; }
         private IAssemblyProvider AssemblyProvider { get; }
-        private IServiceScope Scope { get; }
         public List<IServicePrototype> Services { get; } = new List<IServicePrototype>();
         public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger, IAssemblyProvider assemblyProvider)
         {
             ServiceProvider = serviceProvider;
-            Scope = serviceProvider.CreateScope();
             Logger = logger;
             AssemblyProvider = assemblyProvider;
             Idle();
@@ -69,15 +67,15 @@ namespace X10D.Core.Services
         {
             AddOnStateChange(OnServiceStateChange);
 
-            var services = Scope
-                .ServiceProvider
+            var services = ServiceProvider
                 .GetServices<IServicePrototype>()
-                .Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)));
+                .Where(service => !service.GetType().GetInterfaces().Contains(typeof(IKernelFacade)))
+                .ToList();
 
             var priorityServices = services.Where(service => service.LoadPriority.HasValue).OrderBy(services => services.LoadPriority.Value);
             foreach (var service in priorityServices)
             {
-                service.Prepare().Wait();
+                service.AddOnStateChange(OnServiceStateChange).Prepare().Wait();
             }
             Services.AddRange(priorityServices);
 
@@ -121,7 +119,6 @@ namespace X10D.Core.Services
         public override void Dispose()
         {
             base.Dispose();
-            Scope.Dispose();
         }
         
         private void OnServiceStateChange(IServicePrototype service, ServiceStateChangeEventArgs args)

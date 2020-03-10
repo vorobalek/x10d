@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
+using X10D.Core.Services;
 using X10D.Infrastructure;
 
 namespace X10D.Core.Middleware
@@ -14,7 +15,7 @@ namespace X10D.Core.Middleware
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context, IDebuggerSession session)
         {
             var requestStartedOn = DateTime.Now;
             context.Items.Add(Constants.RequestStartedOn, requestStartedOn);
@@ -26,6 +27,8 @@ namespace X10D.Core.Middleware
 
             var request_time = requestFinishedOn - requestStartedOn;
             context.Items.Add(Constants.RequestTime, request_time);
+
+            session.AddDebugInfo("request_time", $"{request_time.TotalMilliseconds} ms.");
         }
     }
 }

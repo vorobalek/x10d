@@ -10,7 +10,7 @@ namespace X10D.Core.Services
     internal sealed class KernelProtection : ServicePrototype<IKernelProtection>, IKernelProtection
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
-
+        public override int? LoadPriority => -1;
         public string SafeRedirectUrl 
         {
             get

@@ -110,7 +110,7 @@ namespace X10D.Infrastructure
             return this;
         }
 
-        public virtual int? LoadPriority => 0;
+        public virtual int? LoadPriority => null;
         public abstract ServiceLifetime ServiceLifetime { get; }
         public virtual Func<IServiceProvider, object> CustomFactory { get; } = null;
         public ServiceState State { get; private set; } = ServiceState.Unknown;
@@ -125,46 +125,6 @@ namespace X10D.Infrastructure
         protected virtual void StopService() { }
         protected virtual void BlockService() { }
         protected virtual Action Process { get; } = null;
-        protected ThreadStart ThreadStart(Action action) => () => action();
-        protected void CriticalWhile(Func<bool> condition, Action action)
-        {
-            var currentThreadId = Guid.NewGuid();
-            Critical(() => processId = currentThreadId, processId);
-
-            while (condition() && Critical(() => processId is Guid guid && guid == currentThreadId, processId))
-            {
-                action();
-            }
-        }
-        protected void CriticalDoWhile(Func<bool> condition, Action action)
-        {
-            var currentThreadId = Guid.NewGuid();
-            Critical(() => processId = currentThreadId, processId);
-
-            do
-            {
-                action();
-            }
-            while (condition() && Critical(() => processId is Guid guid && guid == currentThreadId, processId));
-        }
-
-        protected void CriticalForEach<T>(IEnumerable<T> enumerable, Action<T> action)
-        {
-            var currentThreadId = Guid.NewGuid();
-            Critical(() => processId = currentThreadId, processId);
-
-            foreach (var item in enumerable)
-            {
-                if (Critical(() => processId is Guid guid && guid == currentThreadId, processId))
-                {
-                    action(item);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
         protected void IfStable(Action action)
         {
             IfStable<object>(() => { action(); return null; });
