@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using X10D.Core.Services;
+using X10D.Infrastructure;
 
 namespace X10D.Core.Components.Debugger
 {
@@ -12,7 +13,7 @@ namespace X10D.Core.Components.Debugger
 
         public void Invoke(IDebuggerSession session, IKernel kernel, IHttpContextAccessor contextAccessor)
         {
-            var names = contextAccessor.HttpContext.Request.Query["debug"][0].Split(',').Where(key => key.StartsWith("service_log_for_", StringComparison.InvariantCultureIgnoreCase));
+            var names = contextAccessor.HttpContext.Request.Query[Constants.Debug][0].Split(',').Where(key => key.StartsWith("service_log_for_", StringComparison.InvariantCultureIgnoreCase));
             foreach (var name in names)
             {
                 var serviceName = name.Substring("service_log_for_".Length);

@@ -79,12 +79,6 @@ namespace X10D.Core.Services
             });
         }
 
-        Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string[] keys) => (this as IDebuggerFacade).ProcessDebugAsync(null, keys);
-        async Task<IDebuggerSessionFacade> IDebuggerFacade.ProcessDebugAsync(string session_name, string[] keys)
-        {
-            return await (this as IDebugger).ProcessDebugAsync(session_name, keys).ConfigureAwait(true);
-        }
-
         protected override void FlushService()
         {
             components = new Dictionary<string, Type>();

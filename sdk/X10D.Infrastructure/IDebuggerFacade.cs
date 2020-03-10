@@ -2,9 +2,12 @@
 
 namespace X10D.Infrastructure
 {
-    public interface IDebuggerFacade
+    public interface IDebuggerFacade<TSession>
+        where TSession : IDebuggerSessionFacade
     {
-        Task<IDebuggerSessionFacade> ProcessDebugAsync(string[] keys);
-        Task<IDebuggerSessionFacade> ProcessDebugAsync(string session_name, string[] keys);
+        Task<TSession> ProcessDebugAsync(string[] keys);
+        Task<TSession> ProcessDebugAsync(string session_name, string[] keys);
     }
+
+    public interface IDebuggerFacade : IDebuggerFacade<IDebuggerSessionFacade> { }
 }

@@ -13,7 +13,7 @@ namespace X10D.Infrastructure.Components.Debugger
         public void Invoke(IDebuggerSessionFacade session, IActivator activator, IHttpContextAccessor contextAccessor)
         {
             var assemblies = activator.Assemblies;
-            var names = contextAccessor.HttpContext.Request.Query["debug"][0].Split(',').Where(key => key.StartsWith("all_types_for_", StringComparison.InvariantCultureIgnoreCase));
+            var names = contextAccessor.HttpContext.Request.Query[Constants.Debug][0].Split(',').Where(key => key.StartsWith("all_types_for_", StringComparison.InvariantCultureIgnoreCase));
             if (names.Count() > 0)
             {
                 foreach (var name in names)
