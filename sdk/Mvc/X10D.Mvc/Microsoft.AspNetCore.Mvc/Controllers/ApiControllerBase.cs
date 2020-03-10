@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.Mvc
         [FromRoute]
         public string Format { get; set; } = Constants.DefaultFormat;
 
-        IActivator Activator { get; }
+        protected IActivator Activator { get; }
         public ApiControllerBase(IActivator activator)
         {
             Activator = activator;

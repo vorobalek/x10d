@@ -9,6 +9,7 @@ namespace X10D.Core.Api.Kernel
         {
         }
 
+        [HttpGet]
         public IActionResult Get([FromServices] IKernelFacade kernel)
         {
             return Ok((int)kernel.State, $"{kernel.State}");
