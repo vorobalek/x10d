@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,10 +21,14 @@ namespace X10D.Infrastructure
                     PrepareService();
                     if (Process != null)
                     {
-                        process = new Task(() =>
+                        process = new Thread(new ThreadStart(() =>
                         {
-                            Process();
-                        }, TaskCreationOptions.LongRunning);
+                            try
+                            {
+                                Process();
+                            }
+                            catch { }
+                        }));
                     }
                 });
                 IfStable(() => SetState(ServiceState.Prepared));
@@ -39,10 +42,7 @@ namespace X10D.Infrastructure
                 IfStable(() =>
                 {
                     StartService();
-                    if (process != null)
-                    {
-                        process.Start();
-                    }
+                    process?.Start();
                 });
                 IfStable(() => SetState(ServiceState.InProgress));
             });
@@ -55,12 +55,8 @@ namespace X10D.Infrastructure
                 AnyWay(() =>
                 {
                     FlushService();
-                    Critical(() => processId = Guid.NewGuid(), processId);
-                    if (process != null)
-                    {
-                        process.Wait();
-                        process.Dispose();
-                    }
+                    process?.Interrupt();
+                    process = null;
                 });
                 AnyWay(() => SetState(ServiceState.Flushed));
             });
@@ -73,11 +69,7 @@ namespace X10D.Infrastructure
                 IfStable(() =>
                 {
                     StopService();
-                    Critical(() => processId = Guid.NewGuid(), processId);
-                    if (process != null)
-                    {
-                        process.Wait();
-                    }
+                    process?.Interrupt();
                 });
                 IfStable(() => SetState(ServiceState.Stopped));
             });
@@ -90,11 +82,7 @@ namespace X10D.Infrastructure
                 AnyWay(() =>
                 {
                     BlockService();
-                    Critical(() => processId = Guid.NewGuid(), processId);
-                    if (process != null)
-                    {
-                        process?.Wait();
-                    }
+                    process?.Interrupt();
                 });
                 AnyWay(() => SetState(ServiceState.Blocked));
             });
@@ -168,7 +156,6 @@ namespace X10D.Infrastructure
                 return func();
             }
         }
-
         protected Task Prepare() => (this as IServicePrototype).Prepare();
         protected Task Start() => (this as IServicePrototype).Stop();
         protected Task Stop() => (this as IServicePrototype).Stop();
@@ -178,8 +165,7 @@ namespace X10D.Infrastructure
         protected IServicePrototype RemoveOnStateChange(ServiceStateChangeEventHandler handler) => (this as IServicePrototype).RemoveOnStateChange(handler);
 
         private event ServiceStateChangeEventHandler ServiceChangeStateEvent;
-        private Task process;
-        private object processId;
+        private Thread process;
         private readonly object baseLocker = new object();
         private bool IsStable =>
             State != ServiceState.Blocking

@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Linq;
-using System.Reflection;
 using X10D.Infrastructure;
-using X10D.Mvc.Attributes;
 using X10D.Mvc.Formats;
+using X10D.Mvc.Services;
 
 namespace Microsoft.AspNetCore.Mvc
 {
@@ -43,12 +41,7 @@ namespace Microsoft.AspNetCore.Mvc
 
         protected IActionResult Response(bool ok, object result = null, int? status_code = null, string description = null)
         {
-            var formatType = Activator
-                .GetImplementations<IApiResponse>()
-                .Where(t => !t.IsAbstract &&
-                    t.GetCustomAttribute<FormatAttribute>() is FormatAttribute f &&
-                    f.Name.ToLowerInvariant() == Format.ToLowerInvariant())
-                .FirstOrDefault();
+            var formatType = Activator.GetServiceOrCreateInstance<IApiResponseFactory>().GetFormatType(Format);
 
             if (formatType == null)
             {

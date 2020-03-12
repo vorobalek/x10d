@@ -6,20 +6,22 @@ using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using X10D.Core.Services;
+using X10D.Infrastructure;
 
-namespace X10D.Core.Components.Debugger
+namespace X10D.Mvc.Components.Debugger
 {
     internal sealed class BackendEndpoindsDebuggerComponent
     {
         public string Key => "backend_endpoints";
         public string Description => "Show all backend mapped system endpoints. Example: ?debug=all_sessions";
-        public void Invoke(IDebuggerSession session, IActionDescriptorCollectionProvider actionDescriptorCollectionProvider)
+        public void Invoke(IDebuggerSessionFacade session, IActionDescriptorCollectionProvider actionDescriptorCollectionProvider)
         {
             var items = actionDescriptorCollectionProvider
                 .ActionDescriptors
                 .Items
-                .Where(descriptor => descriptor.GetType() == typeof(ControllerActionDescriptor))
+                .Where(descriptor => descriptor is ControllerActionDescriptor controllerActionDescriptor &&
+                (!controllerActionDescriptor.ControllerTypeInfo.GetCustomAttribute<ApiRouteAttribute>()?.IsHidden ?? true) &&
+                (!controllerActionDescriptor.ControllerTypeInfo.GetCustomAttribute<SecureApiRouteAttribute>()?.IsHidden ?? true))
                 .Select(descriptor => (ControllerActionDescriptor)descriptor)
                 .GroupBy(descriptor => descriptor.ControllerTypeInfo.FullName)
                 .ToList();

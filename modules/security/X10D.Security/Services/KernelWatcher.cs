@@ -21,11 +21,11 @@ namespace X10D.Security.Services
         //protected override Action Process =>
         //    () =>
         //    {
-        //        CriticalWhile(() => true, () =>
+        //        while (true)
         //        {
         //            Logger.LogInformation($"Kernel state: {Kernel.State} Ticks: {DateTime.Now.Ticks}");
         //            Thread.Sleep(1000);
-        //        });
+        //        }
         //    };
     }
 }

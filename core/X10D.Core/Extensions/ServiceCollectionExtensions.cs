@@ -56,13 +56,7 @@ namespace X10D.Core.Extensions
                 });
 
             services
-                .AddAuthorization(opts =>
-                {
-                    opts.AddPolicy(Constants.TokenSidePolicy, (builder) =>
-                    {
-                        builder.RequireClaim(Constants.TokenSidePolicy);
-                    });
-                })
+                .AddAuthorization()
                 .AddControllersWithViews();
 
             services

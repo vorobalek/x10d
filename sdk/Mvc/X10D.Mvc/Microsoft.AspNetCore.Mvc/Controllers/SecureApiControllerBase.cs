@@ -4,7 +4,6 @@ using X10D.Infrastructure;
 namespace Microsoft.AspNetCore.Mvc
 {
     [SecureApiRoute]
-    [Authorize(Policy = Constants.TokenSidePolicy)]
     public class SecureApiControllerBase : ApiControllerBase
     {
         public string Token { get; set; }

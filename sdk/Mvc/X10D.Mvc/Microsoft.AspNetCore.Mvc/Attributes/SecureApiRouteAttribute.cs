@@ -2,8 +2,10 @@
 {
     public class SecureApiRouteAttribute : RouteAttribute
     {
+        public bool IsHidden { get; set; } = false;
+
         public SecureApiRouteAttribute(string area = "shared")
-            : base($"/api/{{Format}}/{{Token}}/{area}.[controller]")
+            : base($"/api/secure/{{Token}}/{{Format}}/{area}.[controller]")
         {
         }
     }

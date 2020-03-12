@@ -14,13 +14,11 @@ namespace X10D.Core.Services
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
         private IServiceProvider ServiceProvider { get; }
         private ILogger Logger { get; }
-        private IAssemblyProvider AssemblyProvider { get; }
         public List<IServicePrototype> Services { get; } = new List<IServicePrototype>();
         public Kernel(IServiceProvider serviceProvider, ILogger<Kernel> logger, IAssemblyProvider assemblyProvider)
         {
             ServiceProvider = serviceProvider;
             Logger = logger;
-            AssemblyProvider = assemblyProvider;
             Idle();
         }
 
