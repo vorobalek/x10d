@@ -34,11 +34,11 @@
           },
           "configurations": {
             "dev": {
-              "optimization": true,
+              "optimization": false,
               "outputHashing": "all",
-              "sourceMap": true,
-              "extractCss": true,
-              "namedChunks": false,
+              "sourceMap": false,
+              "extractCss": false,
+              "namedChunks": true,
               "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
