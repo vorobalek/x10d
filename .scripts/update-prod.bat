@@ -1,1 +1,1 @@
-call update.bat "prod"
+call update.bat "prod" 5000 5001
