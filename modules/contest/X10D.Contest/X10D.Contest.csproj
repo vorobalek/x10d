@@ -5,7 +5,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\..\.builds\app\netcoreapp3.1\modules\security</OutputPath>
+    <OutputPath>..\..\..\.builds\app\netcoreapp3.1\modules\contest</OutputPath>
+    <DocumentationFile>..\..\..\.builds\doc\X10D.Contest.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\..\.builds\app\netcoreapp3.1\modules\contest</OutputPath>
     <DocumentationFile>..\..\..\.builds\doc\X10D.Contest.xml</DocumentationFile>
   </PropertyGroup>
 
