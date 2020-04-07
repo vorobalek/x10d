@@ -117,6 +117,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IDuplicatedEntity<TKey> GetOriginal<TKey>(this IDuplicatedEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -130,6 +131,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IEnumerable<IDuplicatedEntity<TKey>> GetDuplicates<TKey>(this IDuplicatedEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -143,6 +145,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IHierarchicalEntity<TKey> GetHigher<TKey>(this IHierarchicalEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -156,6 +159,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IHierarchicalEntity<TKey> GetInferior<TKey>(this IHierarchicalEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -169,6 +173,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IEnumerable<IHierarchicalEntity<TKey>> GetInferiors<TKey>(this IHierarchicalEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -182,6 +187,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IVersionedEntity<TKey> GetParent<TKey>(this IVersionedEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -195,6 +201,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IVersionedEntity<TKey> GetChild<TKey>(this IVersionedEntity<TKey> entity)
             where TKey : struct, IComparable
         {
@@ -208,6 +215,7 @@ namespace X10D.Data.EntityFramework
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
+        [Obsolete("Не реализовано.", true)]
         public static IEnumerable<IVersionedEntity<TKey>> GetChildrens<TKey>(this IVersionedEntity<TKey> entity)
             where TKey : struct, IComparable
         {

@@ -69,7 +69,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "security", "security", "{12
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contest", "contest", "{1C0F46F5-77B2-4CD5-8FD5-5498AB9B1C6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X10D.Contest", "modules\contest\X10D.Contest\X10D.Contest.csproj", "{0EB2934C-14F0-465E-8728-103D1D60FC99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "X10D.Contest", "modules\contest\X10D.Contest\X10D.Contest.csproj", "{0EB2934C-14F0-465E-8728-103D1D60FC99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

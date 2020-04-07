@@ -37,16 +37,19 @@ namespace X10D.Infrastructure
         /// <summary>
         /// Зависимые сборки <see cref="BaseMetadata"/>.
         /// </summary>
+        [Obsolete("Не реализовано.", true)]
         public IEnumerable<BaseMetadata> ReferencesModules => throw new NotImplementedException();
 
         /// <summary>
         /// Зависимые сборки <see cref="Assembly"/>.
         /// </summary>
+        [Obsolete("Не реализовано.", true)]
         public IEnumerable<Assembly> ReferencesAssemblies => throw new NotImplementedException();
 
         /// <summary>
         /// Сборки подмодулей.
         /// </summary>
+        [Obsolete("Не реализовано.", true)]
         public virtual IEnumerable<BaseMetadata> SubModules => throw new NotImplementedException();
 
         /// <summary>

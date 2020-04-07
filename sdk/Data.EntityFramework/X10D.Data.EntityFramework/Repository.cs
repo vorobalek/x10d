@@ -295,7 +295,7 @@ namespace X10D.Data.EntityFramework
         protected IEnumerable<TResult> ExecuteQuery<TResult>(string query, params object[] args)
             where TResult : class
         {
-            return storageContext.Set<TResult>().FromSqlRaw<TResult>(query, args);
+            return storageContext.Set<TResult>().FromSqlRaw(query, args);
         }
 
         /// <summary>
