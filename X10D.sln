@@ -71,6 +71,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contest", "contest", "{1C0F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "X10D.Contest", "modules\contest\X10D.Contest\X10D.Contest.csproj", "{0EB2934C-14F0-465E-8728-103D1D60FC99}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X10D.Core.Libraries", "core\X10D.Core.Libraries\X10D.Core.Libraries.csproj", "{51A2F984-E764-4DA9-B112-486E43951774}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +171,10 @@ Global
 		{0EB2934C-14F0-465E-8728-103D1D60FC99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0EB2934C-14F0-465E-8728-103D1D60FC99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0EB2934C-14F0-465E-8728-103D1D60FC99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51A2F984-E764-4DA9-B112-486E43951774}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51A2F984-E764-4DA9-B112-486E43951774}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51A2F984-E764-4DA9-B112-486E43951774}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51A2F984-E764-4DA9-B112-486E43951774}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -205,6 +211,7 @@ Global
 		{121DAEDF-11D6-476B-A7DD-CF2E8A9DA043} = {56772024-C2D7-404F-AFCE-F3C4705F0F81}
 		{1C0F46F5-77B2-4CD5-8FD5-5498AB9B1C6B} = {56772024-C2D7-404F-AFCE-F3C4705F0F81}
 		{0EB2934C-14F0-465E-8728-103D1D60FC99} = {1C0F46F5-77B2-4CD5-8FD5-5498AB9B1C6B}
+		{51A2F984-E764-4DA9-B112-486E43951774} = {22EDE6F9-3B51-4417-93CF-7253884C4F91}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EDA3FA5A-805A-48E2-90C0-D200BB02745F}

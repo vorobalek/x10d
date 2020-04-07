@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Text;
+using System.Reflection;
+using X10D.Infrastructure;
+using X10D.Mvc.Attributes;
 
 namespace X10D.Mvc.Formats
 {
@@ -44,6 +45,12 @@ namespace X10D.Mvc.Formats
         double? request_time { get; }
 #pragma warning restore IDE1006 // Стили именования
 
-        StringBuilder Pack();
+        string ContentType
+        {
+            get
+            {
+                return GetType().GetCustomAttribute<FormatAttribute>()?.ContentType ?? Constants.DefaultFormatContentType;
+            }
+        }
     }
 }

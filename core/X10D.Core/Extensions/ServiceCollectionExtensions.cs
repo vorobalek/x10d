@@ -11,10 +11,12 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using X10D.Core.Data;
 using X10D.Core.Services;
 using X10D.Core.StartupFilters;
 using X10D.Infrastructure;
+using X10D.Infrastructure.Attributes;
 
 namespace X10D.Core.Extensions
 {
@@ -27,12 +29,28 @@ namespace X10D.Core.Extensions
             services
                 .AddLogging(configure =>
                 {
+                    var dt = DateTime.Now;
+                    var dtString = $"{dt.Year:0000}{dt.Month:00}{dt.Day:00}/{dt.Hour:00}{dt.Minute:00}{dt.Second:00}";
+                    var outputTemplate = "{Timestamp:o} {RequestId,13} [{Level:u4}] {Message} ({EventId:x8}){NewLine}{Exception}";
                     configure
                         .AddConsole(c =>
                         {
                             c.TimestampFormat = "[dd.MM.yyyy HH:mm:ss.ffffff]\r\n      ";
                         })
-                        .AddDebug();
+                        .AddDebug()
+                        .AddFile($"logs/{dtString}/VERB.txt", minimumLevel: LogLevel.Trace, outputTemplate: outputTemplate)
+                        .AddFile($"logs/{dtString}/DBUG.txt", minimumLevel: LogLevel.Debug, outputTemplate: outputTemplate)
+                        .AddFile($"logs/{dtString}/INFO.txt", minimumLevel: LogLevel.Information, outputTemplate: outputTemplate)
+                        .AddFile($"logs/{dtString}/WARN.txt", minimumLevel: LogLevel.Warning, outputTemplate: outputTemplate)
+                        .AddFile($"logs/{dtString}/EROR.txt", minimumLevel: LogLevel.Error, outputTemplate: outputTemplate)
+                        .AddFile($"logs/{dtString}/FATL.txt", minimumLevel: LogLevel.Critical, outputTemplate: outputTemplate)
+
+                        .AddFile($"wwwroot/logs/{dtString}/VERB.json", minimumLevel: LogLevel.Trace, outputTemplate: outputTemplate, isJson: true)
+                        .AddFile($"wwwroot/logs/{dtString}/DBUG.json", minimumLevel: LogLevel.Debug, outputTemplate: outputTemplate, isJson: true)
+                        .AddFile($"wwwroot/logs/{dtString}/INFO.json", minimumLevel: LogLevel.Information, outputTemplate: outputTemplate, isJson: true)
+                        .AddFile($"wwwroot/logs/{dtString}/WARN.json", minimumLevel: LogLevel.Warning, outputTemplate: outputTemplate, isJson: true)
+                        .AddFile($"wwwroot/logs/{dtString}/EROR.json", minimumLevel: LogLevel.Error, outputTemplate: outputTemplate, isJson: true)
+                        .AddFile($"wwwroot/logs/{dtString}/FATL.json", minimumLevel: LogLevel.Critical, outputTemplate: outputTemplate, isJson: true);
                 })
 
                 .AddEntityFrameworkSqlite()
@@ -94,35 +112,70 @@ namespace X10D.Core.Extensions
                 }.All(flag => flag);
             });
 
+            var logger = tempResolver.GetService<ILogger<Startup>>();
+
             foreach (var serviceType in serviceTypes)
             {
-                var serviceEmpty = activator.CreateEmpty<IServicePrototype>(serviceType);
-                if (serviceEmpty.InterfaceType != null)
-                {
-                    if (serviceEmpty.CustomFactory != null)
-                    {
-                        services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceEmpty.CustomFactory, serviceEmpty.ServiceLifetime));
-                    }
-                    else
-                    {
-                        services.Add(new ServiceDescriptor(serviceEmpty.InterfaceType, serviceType, serviceEmpty.ServiceLifetime));
-                    }
-                }
+                Type interfaceType = default;
+                Func<IServiceProvider, object> customFactory = default;
+                ServiceLifetime serviceLifetime = default;
 
-                // adding all services as prototypes
-                if (serviceEmpty.InterfaceType != null && 
-                    serviceEmpty.InterfaceType != typeof(IServicePrototype))
+                if (!serviceType.IsGenericType)
                 {
-                    services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceProvider => serviceProvider.GetService(serviceEmpty.InterfaceType), serviceEmpty.ServiceLifetime));
+                    var serviceEmpty = activator.CreateEmpty<IServicePrototype>(serviceType);
+                    interfaceType = serviceEmpty.InterfaceType;
+                    customFactory = serviceEmpty.CustomFactory;
+                    serviceLifetime = serviceEmpty.ServiceLifetime;
                 }
                 else
                 {
-                    services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceType, serviceEmpty.ServiceLifetime));
+                    if (serviceType.GetCustomAttribute<ServiceAttribute>() is ServiceAttribute attribute)
+                    {
+                        interfaceType = attribute.InterfaceType;
+                        customFactory = attribute.CustomFactory;
+                        serviceLifetime = attribute.ServiceLifetime;
+                    }
                 }
+                services.RegisterService(serviceType, interfaceType, customFactory, serviceLifetime, logger, serviceType.IsGenericType);
             }
 
             return services;
         }
+        private static void RegisterService(this IServiceCollection services, Type serviceType, Type interfaceType, Func<IServiceProvider, object> customFactory,  ServiceLifetime serviceLifetime, ILogger logger, bool isGeneric)
+        {
+            if (serviceType != default)
+            {
+                if (interfaceType != default)
+                {
+                    if (customFactory != default)
+                    {
+                        services.Add(new ServiceDescriptor(interfaceType, customFactory, serviceLifetime));
+                        logger.LogWarning($"The \"{interfaceType.GetFullName()}\" service is registered as {serviceLifetime} with custom factory.");
+                    }
+                    else
+                    {
+                        services.Add(new ServiceDescriptor(interfaceType, serviceType, serviceLifetime));
+                        logger.LogWarning($"The \"{interfaceType.GetFullName()}\" service is registered as {serviceLifetime} with {serviceType.GetFullName()} implementation.");
+                    }
+                }
+                if (!isGeneric)
+                {
+                    // adding all services as prototypes
+                    if (interfaceType != default &&
+                        interfaceType != typeof(IServicePrototype))
+                    {
+                        services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceProvider => serviceProvider.GetService(interfaceType), serviceLifetime));
+                        logger.LogWarning($"The \"{typeof(IServicePrototype).GetFullName()}\" service is registered as {serviceLifetime} with standart factory (=> {interfaceType.GetFullName()}).");
+                    }
+                    else
+                    {
+                        services.Add(new ServiceDescriptor(typeof(IServicePrototype), serviceType, serviceLifetime));
+                        logger.LogWarning($"The \"{typeof(IServicePrototype).GetFullName()}\" service is registered as {serviceLifetime} with {serviceType.GetFullName()} implementation.");
+                    }
+                }
+            }
+        }
+
 
         private static IServiceCollection TryAddExtCore(this IServiceCollection services)
         {

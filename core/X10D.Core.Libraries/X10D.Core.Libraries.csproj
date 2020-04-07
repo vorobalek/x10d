@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>..\..\.builds\doc\X10D.Core.Libraries.xml</DocumentationFile>
+    <OutputPath>..\..\.builds\app</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>..\..\.builds\doc\X10D.Core.Libraries.xml</DocumentationFile>
+    <OutputPath>..\..\.builds\app</OutputPath>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\sdk\Data.EntityFramework\X10D.Data.EntityFramework.PostgreSql\X10D.Data.EntityFramework.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\sdk\X10D.Infrastructure\X10D.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

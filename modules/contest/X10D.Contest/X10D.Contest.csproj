@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -15,6 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\sdk\Data.EntityFramework\X10D.Data.EntityFramework.PostgreSql\X10D.Data.EntityFramework.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\..\sdk\Mvc\X10D.Mvc\X10D.Mvc.csproj" />
     <ProjectReference Include="..\..\..\sdk\X10D.Infrastructure\X10D.Infrastructure.csproj" />
   </ItemGroup>
 

@@ -11,6 +11,7 @@
 
         public const string Debug = "__debug__";
         public const string DefaultFormat = "raw";
+        public const string DefaultFormatContentType = "text/plain";
 
         public const string TokenSidePolicy = "TokenSidePolicy";
     }

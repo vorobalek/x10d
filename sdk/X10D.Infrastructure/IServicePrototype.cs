@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 namespace X10D.Infrastructure
 {
     public delegate void ServiceStateChangeEventHandler(IServicePrototype sender, ServiceStateChangeEventArgs args);
-
     public interface IServicePrototype : IDisposable
     {
         int? LoadPriority { get; }

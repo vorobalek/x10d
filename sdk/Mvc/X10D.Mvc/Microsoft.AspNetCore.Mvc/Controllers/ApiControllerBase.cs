@@ -69,7 +69,8 @@ namespace Microsoft.AspNetCore.Mvc
                 requestTimeProp.SetValue(response, (DateTime.Now - stamp).TotalMilliseconds);
             }
 
-            return StatusCode(response.status_code, response.Pack().ToString());
+            HttpContext.Response.ContentType = response.ContentType;
+            return StatusCode(response.status_code, response);
         }
     }
 }

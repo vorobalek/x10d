@@ -53,6 +53,8 @@ namespace X10D.Core.Extensions
                         pattern: "kernel/{controller=home}/{action=index}",
                         defaults: new { area = "kernel", controller = "home", action="index" },
                         constraints: new { area = "kernel" });
+
+                    endpoints.MapControllers();
                 });
         }
 
