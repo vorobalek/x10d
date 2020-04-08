@@ -42,7 +42,7 @@ namespace X10D.Mvc.Components.Debugger
                     {
                         httpMethod = string.Join(", ", httpMethodMetadata.HttpMethods);
                     }
-                    endpoints.Add($"{(IsProtectedAction(controllerTypeInfo, methodInfo) ? "🔒" : "-")}\t{httpMethod}:\t{descriptor.AttributeRouteInfo.Template.ToLower()}");
+                    endpoints.Add($"{(IsProtectedAction(controllerTypeInfo, methodInfo) ? "*" : "-")}\t{httpMethod}:\t{descriptor.AttributeRouteInfo.Template.ToLower()}");
                 }
             }
             endpoints

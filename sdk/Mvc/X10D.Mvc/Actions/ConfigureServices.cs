@@ -5,7 +5,7 @@ using X10D.Mvc.Formats;
 
 namespace X10D.Mvc.Actions
 {
-    public class ConfigureServicesAction : IConfigureServicesAction
+    internal sealed class ConfigureServices : IConfigureServicesAction
     {
         public int Priority => 1000;
 

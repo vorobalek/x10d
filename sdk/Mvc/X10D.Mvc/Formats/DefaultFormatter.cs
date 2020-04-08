@@ -12,6 +12,7 @@ namespace X10D.Mvc.Formats
         {
             SupportedMediaTypes.Add(Constants.DefaultFormatContentType);
             SupportedEncodings.Add(Encoding.UTF8);
+            SupportedEncodings.Add(Encoding.UTF32);
             SupportedEncodings.Add(Encoding.Unicode);
         }
 

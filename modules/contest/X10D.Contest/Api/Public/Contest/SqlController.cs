@@ -16,10 +16,9 @@ namespace X10D.Contest.Api.Public.Contest
         [HttpGet]
         public async Task<IActionResult> Get(string query)
         {
-            var sqlProvider = Activator.GetServiceOrCreateInstance<ISqlProvider<SqlController>>();
+            using var sqlProvider = Activator.GetServiceOrCreateInstance<ISqlProvider<SqlController>>();
 
             var result = new List<IEnumerable<object>>();
-            await sqlProvider.OpenConnectionAsync();
             var reader = await sqlProvider.ExecuteDataReaderAsync(query);
 
             var schema = reader.GetColumnSchema();
@@ -34,7 +33,6 @@ namespace X10D.Contest.Api.Public.Contest
                 }
                 result.Add(line);
             }
-            await sqlProvider.CloseConnectionAsync();
 
             return Ok(result);
         }

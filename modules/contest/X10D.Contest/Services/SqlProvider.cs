@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using X10D.Infrastructure;
 using X10D.Infrastructure.Attributes;
@@ -21,15 +22,13 @@ namespace X10D.Contest.Services
     }
 
     [Service(InterfaceType = typeof(ISqlProvider<>), ServiceLifetime = ServiceLifetime.Transient)]
-    internal sealed class SqlProvider<T> : ServicePrototype<ISqlProvider<T>>, ISqlProvider<T>
+    internal class SqlProvider<T> : ServicePrototype, ISqlProvider<T>
     {
         public override ServiceLifetime ServiceLifetime => ServiceLifetime.Transient;
         private ILogger Logger { get; }
         private IConfiguration Configuration { get; }
         private NpgsqlConnection Connection { get; }
         private IDataBinder DataBinder { get; }
-
-        public Type OwnerType => typeof(T);
         public SqlProvider(ILogger<ISqlProvider> logger, IConfiguration configuration, IDataBinder dataBinder)
         {
             UID = Guid.NewGuid();
@@ -38,43 +37,19 @@ namespace X10D.Contest.Services
 
             Logger = logger;
             Configuration = configuration;
-            var connectionString = Environment.GetEnvironmentVariable("Contest.ConnectionString")
+            ConnectionString = Environment.GetEnvironmentVariable("Contest.ConnectionString")
                 ?? Configuration.GetConnectionString(Configuration["Contest.ConnectionString"]);
-            Connection = new NpgsqlConnection(connectionString);
+            Connection = new NpgsqlConnection(ConnectionString);
             DataBinder = dataBinder;
+
+            Connection.Open();
         }
 
+        public Type OwnerType => typeof(T);
+        public string ConnectionString { get; private set; }
         public Guid UID { get; private set; }
         public ulong QueryCount { get; private set; }
         public bool IsClosed { get; private set; }
-
-        public async Task OpenConnectionAsync()
-        {
-            try
-            {
-                await Connection.OpenAsync();
-                Logger.LogInformation($"Подключение к базе открыто. ({OwnerType})");
-                IsClosed = false;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogCritical($"Произошла ошибка при подключении к базе. ({OwnerType}) {ex.Message}");
-            }
-        }
-
-        public async Task CloseConnectionAsync()
-        {
-            try
-            {
-                IsClosed = true;
-                await Connection.CloseAsync();
-                Logger.LogInformation($"Подключение к базе закрыто. ({OwnerType})");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogCritical($"Произошла ошибка при закрытии соединения с базой. ({OwnerType}) {ex.Message}");
-            }
-        }
 
         public async Task<NpgsqlDataReader> ExecuteDataReaderAsync(string query, NpgsqlParameter[] parameters = null)
         {
@@ -84,6 +59,25 @@ namespace X10D.Contest.Services
         public Task ExecuteQueryAsync(string query, NpgsqlParameter[] parameters = null)
         {
             return Query(query, parameters, false);
+        }
+
+        public async Task<IEnumerable<TModel>> ExecuteModel<TModel>(string query, NpgsqlParameter[] parameters = null) where TModel : class
+        {
+            var reader = await ExecuteDataReaderAsync(query, parameters);
+            var result = new List<TModel>();
+            while (await reader.ReadAsync())
+            {
+                result.Add(DataBinder.Bind<TModel>(reader));
+            }
+            return result;
+        }
+
+        protected override void StopService()
+        {
+            if (Connection.FullState > 0)
+            {
+                Connection.Close();
+            }
         }
 
         private async Task<NpgsqlDataReader> Query(string query, NpgsqlParameter[] parameters, bool executeDataReader)
@@ -115,17 +109,6 @@ namespace X10D.Contest.Services
                 Logger.LogError($"Ошибка выполнения SQL запроса ({OwnerType}) #{queryNumber} {query} : {ex.Message}");
             }
             return sDr;
-        }
-
-        public async Task<IEnumerable<TModel>> ExecuteModel<TModel>(string query, NpgsqlParameter[] parameters = null) where TModel : class
-        {
-            var reader = await ExecuteDataReaderAsync(query, parameters);
-            var result = new List<TModel>();
-            while (await reader.ReadAsync())
-            {
-                result.Add(DataBinder.Bind<TModel>(reader));
-            }
-            return result;
         }
     }
 }
